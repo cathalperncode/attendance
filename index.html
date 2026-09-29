@@ -221,7 +221,7 @@
 <script>
 /* ===== Edit these settings ===== */
 const CONFIG = {
-  SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbyWVAC9IDswOxlJvyZU7XiuH-3QN-rc9-7pJwHWPo19wgz2jSaJLouImfOV0rCTWeCvZA/exec',  // the Web app URL from Apps Script (ends in /exec)
+  SCRIPT_URL: 'PASTE_YOUR_WEB_APP_URL_HERE',  // the Web app URL from Apps Script (ends in /exec)
   CLASS_LABEL: 'PSC 131',                       // shown in the page title
   REQUIRE_LOCATION: true,                       // true = students can't check in without sharing location
   // Do not change the "key" values. They must match the Apps Script.
@@ -243,6 +243,7 @@ const retryBtn = $('retry');
 
 let fix = null;       // { lat, lon, acc } once the browser returns a position
 let sending = false;
+let sid = null;       // one id per check-in attempt, so a retry can't create a duplicate row
 
 const notConfigured = CONFIG.SCRIPT_URL.indexOf('PASTE_YOUR') === 0;
 
@@ -348,6 +349,36 @@ function showDone(name, time) {
   $('done-detail').textContent = name + ', recorded at ' + (time || 'just now') + '.';
 }
 
+/* Talks to the Apps Script by loading it like a script tag, so the reply is always readable. */
+function callScript(params, timeoutMs) {
+  return new Promise((resolve, reject) => {
+    const cbName = '__cb' + Date.now() + Math.floor(Math.random() * 1e6);
+    const tag = document.createElement('script');
+    let finished = false;
+    let timer = null;
+    function finish(fn, value) {
+      if (finished) return;
+      finished = true;
+      clearTimeout(timer);
+      try { delete window[cbName]; } catch (e) { window[cbName] = undefined; }
+      if (tag.parentNode) tag.parentNode.removeChild(tag);
+      fn(value);
+    }
+    window[cbName] = (data) => finish(resolve, data);
+    tag.onerror = () => finish(reject, new Error('load'));
+    timer = setTimeout(() => finish(reject, new Error('timeout')), timeoutMs);
+    const q = new URLSearchParams(params);
+    q.set('callback', cbName);
+    q.set('_', String(Date.now()));
+    tag.src = CONFIG.SCRIPT_URL + (CONFIG.SCRIPT_URL.indexOf('?') === -1 ? '?' : '&') + q.toString();
+    document.head.appendChild(tag);
+  });
+}
+
+function makeId() {
+  return 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+}
+
 $('form').addEventListener('submit', async (e) => {
   e.preventDefault();
   if (sending || missingItems().length > 0) return;
@@ -358,19 +389,21 @@ $('form').addEventListener('submit', async (e) => {
   msg.textContent = '';
   refresh();
 
-  const body = new URLSearchParams({
+  sid = sid || makeId();
+  const params = {
+    action: 'checkin',
+    sid: sid,
     name: name,
     lat: fix ? String(fix.lat) : '',
     lon: fix ? String(fix.lon) : '',
-    acc: fix ? String(fix.acc) : '',
-    clientTime: new Date().toISOString()
-  });
-  CONFIG.QUESTIONS.forEach((q) => body.set(q.key, String(parseCm(inputs[q.key].value))));
+    acc: fix ? String(fix.acc) : ''
+  };
+  CONFIG.QUESTIONS.forEach((q) => { params[q.key] = String(parseCm(inputs[q.key].value)); });
 
   try {
-    const res = await fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: body });
-    const data = await res.json();
+    const data = await callScript(params, 30000);
     if (data && data.ok) {
+      sid = null;
       showDone(name, data.time);
       return;
     }
@@ -380,7 +413,7 @@ $('form').addEventListener('submit', async (e) => {
       msg.textContent = 'Your check-in didn\u2019t save. Tap Check in to try again.';
     }
   } catch (err) {
-    msg.textContent = 'Couldn\u2019t reach the server. Check your connection, then tap Check in again.';
+    msg.textContent = 'We couldn\u2019t confirm your check-in. Tap Check in again. It won\u2019t be counted twice.';
   } finally {
     sending = false;
     submitBtn.textContent = 'Check in';
