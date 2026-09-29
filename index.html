@@ -215,7 +215,7 @@
     </section>
   </div>
 
-  <p class="fine">Checking in records your name, your answers, your device's location, and the time. Your instructor uses this for attendance. <span style="opacity:.6">v4</span></p>
+  <p class="fine">Checking in records your name, your answers, your device's location, and the time. Your instructor uses this for attendance. <span style="opacity:.6">v5</span></p>
 </main>
 
 <script>
@@ -374,20 +374,13 @@ function sendViaForm(params) {
   setTimeout(() => { form.remove(); frame.remove(); }, 60000);   // clean up much later, never cancel the send
 }
 
-/* Sends the check-in two ways at once. The script ignores the second copy by its id.
-   Google doesn't let a web page read its reply, so a failed read does NOT mean it failed to save. */
+/* Sends the check-in with the form POST only (the route that saves rows).
+   The second "fetch" route was removed: Google blocks the page from reading its reply,
+   and that blocked read is what showed up as an error. */
 async function sendCheckin(params) {
-  try { sendViaForm(params); } catch (e) { /* route 1 still runs */ }
   if (navigator.onLine === false) throw new Error('offline');
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 20000);
-  try {
-    await fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: new URLSearchParams(params), signal: controller.signal });
-  } catch (err) {
-    /* expected: the reply can't be read, even when the check-in saved */
-  } finally {
-    clearTimeout(timer);
-  }
+  sendViaForm(params);
+  await new Promise((r) => setTimeout(r, 1500));   // give the form a moment to go out
 }
 
 function makeId() {
