@@ -404,7 +404,7 @@ $('form').addEventListener('submit', async (e) => {
     // Send the check-in without reading Google's reply (the reply is what caused the errors).
     const q = new URLSearchParams(params);
     q.set('_', String(Date.now()));
-    await fetch(CONFIG.SCRIPT_URL + '?' + q.toString(), { method: 'GET', mode: 'no-cors', cache: 'no-store' });
+    await fetch(CONFIG.SCRIPT_URL + '?' + q.toString(), { method: 'GET', mode: 'no-cors', cache: 'no-store', credentials: 'omit' });
     sid = null;
     showDone(name);
     return;
