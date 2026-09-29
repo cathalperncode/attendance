@@ -349,21 +349,38 @@ function showDone(name, time) {
   $('done-detail').textContent = name + ', sent at ' + (time || 'just now') + '.';
 }
 
-/* Sends the check-in to the Apps Script. Google doesn't let a web page read its reply,
-   so we only learn whether the request went out. The script saves the row on its end. */
-async function sendCheckin(params, timeoutMs) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    await fetch(CONFIG.SCRIPT_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      body: new URLSearchParams(params),
-      signal: controller.signal
+/* Sends the check-in the same way the first working version did: a normal form POST.
+   It goes into a hidden frame, so the student never sees Google's raw reply (the old "warning"). */
+function sendCheckin(params, timeoutMs) {
+  return new Promise((resolve, reject) => {
+    const frameName = 'sink' + Date.now();
+    const frame = document.createElement('iframe');
+    frame.name = frameName;
+    frame.style.display = 'none';
+    document.body.appendChild(frame);
+
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = CONFIG.SCRIPT_URL;
+    form.target = frameName;
+    form.style.display = 'none';
+    Object.keys(params).forEach((k) => {
+      const inp = document.createElement('input');
+      inp.type = 'hidden';
+      inp.name = k;
+      inp.value = params[k];
+      form.appendChild(inp);
     });
-  } finally {
-    clearTimeout(timer);
-  }
+    document.body.appendChild(form);
+
+    const timer = setTimeout(() => { cleanup(); reject(new Error('timeout')); }, timeoutMs);
+    function cleanup() {
+      clearTimeout(timer);
+      setTimeout(() => { frame.remove(); form.remove(); }, 1000);
+    }
+    frame.addEventListener('load', () => { cleanup(); resolve(); });
+    form.submit();
+  });
 }
 
 function makeId() {
