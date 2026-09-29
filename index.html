@@ -215,7 +215,7 @@
     </section>
   </div>
 
-  <p class="fine">Checking in records your name, your answers, your device's location, and the time. Your instructor uses this for attendance.</p>
+  <p class="fine">Checking in records your name, your answers, your device's location, and the time. Your instructor uses this for attendance. <span style="opacity:.6">v4</span></p>
 </main>
 
 <script>
@@ -349,38 +349,45 @@ function showDone(name, time) {
   $('done-detail').textContent = name + ', sent at ' + (time || 'just now') + '.';
 }
 
-/* Sends the check-in the same way the first working version did: a normal form POST.
-   It goes into a hidden frame, so the student never sees Google's raw reply (the old "warning"). */
-function sendCheckin(params, timeoutMs) {
-  return new Promise((resolve, reject) => {
-    const frameName = 'sink' + Date.now();
-    const frame = document.createElement('iframe');
-    frame.name = frameName;
-    frame.style.display = 'none';
-    document.body.appendChild(frame);
-
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = CONFIG.SCRIPT_URL;
-    form.target = frameName;
-    form.style.display = 'none';
-    Object.keys(params).forEach((k) => {
-      const inp = document.createElement('input');
-      inp.type = 'hidden';
-      inp.name = k;
-      inp.value = params[k];
-      form.appendChild(inp);
-    });
-    document.body.appendChild(form);
-
-    const timer = setTimeout(() => { cleanup(); reject(new Error('timeout')); }, timeoutMs);
-    function cleanup() {
-      clearTimeout(timer);
-      setTimeout(() => { frame.remove(); form.remove(); }, 1000);
-    }
-    frame.addEventListener('load', () => { cleanup(); resolve(); });
-    form.submit();
+/* Route 2: a plain form POST into a hidden frame (works like a normal web form, no browser reply rules). */
+function sendViaForm(params) {
+  const frameName = 'sink' + Date.now();
+  const frame = document.createElement('iframe');
+  frame.name = frameName;
+  frame.style.display = 'none';
+  frame.setAttribute('aria-hidden', 'true');
+  const form = document.createElement('form');
+  form.setAttribute('method', 'POST');
+  form.setAttribute('action', CONFIG.SCRIPT_URL);
+  form.setAttribute('target', frameName);
+  form.style.display = 'none';
+  Object.keys(params).forEach((k) => {
+    const field = document.createElement('input');
+    field.type = 'hidden';
+    field.name = k;
+    field.value = params[k];
+    form.appendChild(field);
   });
+  document.body.appendChild(frame);
+  document.body.appendChild(form);
+  form.submit();
+  setTimeout(() => { form.remove(); frame.remove(); }, 60000);   // clean up much later, never cancel the send
+}
+
+/* Sends the check-in two ways at once. The script ignores the second copy by its id.
+   Google doesn't let a web page read its reply, so a failed read does NOT mean it failed to save. */
+async function sendCheckin(params) {
+  try { sendViaForm(params); } catch (e) { /* route 1 still runs */ }
+  if (navigator.onLine === false) throw new Error('offline');
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 20000);
+  try {
+    await fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: new URLSearchParams(params), signal: controller.signal });
+  } catch (err) {
+    /* expected: the reply can't be read, even when the check-in saved */
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 function makeId() {
@@ -399,7 +406,6 @@ $('form').addEventListener('submit', async (e) => {
 
   sid = sid || makeId();
   const params = {
-    action: 'checkin',
     sid: sid,
     name: name,
     lat: fix ? String(fix.lat) : '',
@@ -409,12 +415,12 @@ $('form').addEventListener('submit', async (e) => {
   CONFIG.QUESTIONS.forEach((q) => { params[q.key] = String(parseCm(inputs[q.key].value)); });
 
   try {
-    await sendCheckin(params, 30000);
+    await sendCheckin(params);
     sid = null;
     showDone(name, new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }));
     return;
   } catch (err) {
-    msg.textContent = 'Your check-in didn\u2019t go through. Check your connection, then tap Check in again. It won\u2019t be counted twice.';
+    msg.textContent = 'You appear to be offline. Reconnect, then tap Check in again. It won\u2019t be counted twice.';
   } finally {
     sending = false;
     submitBtn.textContent = 'Check in';
