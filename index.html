@@ -346,33 +346,24 @@ function locate() {
 function showDone(name, time) {
   $('form').hidden = true;
   $('done').hidden = false;
-  $('done-detail').textContent = name + ', your check-in was sent at ' + new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) + '.';
+  $('done-detail').textContent = name + ', sent at ' + (time || 'just now') + '.';
 }
 
-/* Talks to the Apps Script by loading it like a script tag, so the reply is always readable. */
-function callScript(params, timeoutMs) {
-  return new Promise((resolve, reject) => {
-    const cbName = '__cb' + Date.now() + Math.floor(Math.random() * 1e6);
-    const tag = document.createElement('script');
-    let finished = false;
-    let timer = null;
-    function finish(fn, value) {
-      if (finished) return;
-      finished = true;
-      clearTimeout(timer);
-      try { delete window[cbName]; } catch (e) { window[cbName] = undefined; }
-      if (tag.parentNode) tag.parentNode.removeChild(tag);
-      fn(value);
-    }
-    window[cbName] = (data) => finish(resolve, data);
-    tag.onerror = () => finish(reject, new Error('load'));
-    timer = setTimeout(() => finish(reject, new Error('timeout')), timeoutMs);
-    const q = new URLSearchParams(params);
-    q.set('callback', cbName);
-    q.set('_', String(Date.now()));
-    tag.src = CONFIG.SCRIPT_URL + (CONFIG.SCRIPT_URL.indexOf('?') === -1 ? '?' : '&') + q.toString();
-    document.head.appendChild(tag);
-  });
+/* Sends the check-in to the Apps Script. Google doesn't let a web page read its reply,
+   so we only learn whether the request went out. The script saves the row on its end. */
+async function sendCheckin(params, timeoutMs) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    await fetch(CONFIG.SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      body: new URLSearchParams(params),
+      signal: controller.signal
+    });
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 function makeId() {
@@ -401,15 +392,12 @@ $('form').addEventListener('submit', async (e) => {
   CONFIG.QUESTIONS.forEach((q) => { params[q.key] = String(parseCm(inputs[q.key].value)); });
 
   try {
-    // Send the check-in without reading Google's reply (the reply is what caused the errors).
-    const q = new URLSearchParams(params);
-    q.set('_', String(Date.now()));
-    await fetch(CONFIG.SCRIPT_URL + '?' + q.toString(), { method: 'GET', mode: 'no-cors', cache: 'no-store', credentials: 'omit' });
+    await sendCheckin(params, 30000);
     sid = null;
-    showDone(name);
+    showDone(name, new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }));
     return;
   } catch (err) {
-    msg.textContent = 'Your check-in didn\u2019t send. Check your connection and tap Check in again. It won\u2019t be counted twice.';
+    msg.textContent = 'Your check-in didn\u2019t go through. Check your connection, then tap Check in again. It won\u2019t be counted twice.';
   } finally {
     sending = false;
     submitBtn.textContent = 'Check in';
