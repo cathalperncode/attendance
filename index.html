@@ -103,7 +103,7 @@
   .counter { text-align: center; color: var(--muted); margin: 0 0 0.5rem; }
   .answers { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin: 0.75rem 0; }
   .answers button {
-    font: inherit; font-weight: 700; font-size: 1.2rem; padding: 1.2rem 0.5rem; border-radius: 12px;
+    font: inherit; font-weight: 700; font-size: 1.4rem; padding: 1.7rem 0.5rem; border-radius: 12px;
     border: 2px solid var(--line); background: transparent; color: var(--ink); cursor: pointer;
   }
   .answers .ok { border-color: var(--ok); color: var(--ok); }
@@ -151,7 +151,7 @@
     <div id="stage"></div>
   </div>
 
-  <p class="fine">Your names, student IDs, course section, trial results, device location, and the time are saved for your instructor. <span style="opacity:.6">v12</span></p>
+  <p class="fine">Your names, student IDs, course section, trial results, device location, and the time are saved for your instructor. <span style="opacity:.6">v14</span></p>
   <p class="fine center" id="restart-wrap" hidden><button type="button" class="link" id="restart">Start over</button></p>
 </main>
 
@@ -174,11 +174,11 @@ const CONFIG = {
   // Distances in mm, largest to smallest. Only six different settings are used in total.
   SITES: [
     { key: 'shoulder', name: 'Shoulder', distances: [60, 45, 30, 20],
-      where: 'The back of the shoulder, about 3 to 5 cm to the side of the spine, near the base of the neck.' },
+      where: 'The back of the shoulder.' },
     { key: 'forearm',  name: 'Forearm',  distances: [45, 30, 20, 10],
-      where: 'The inner (palm-side) surface of the forearm, about halfway between the wrist and the elbow.' },
+      where: 'The forearm.' },
     { key: 'palm',     name: 'Palm',     distances: [30, 20, 10, 5],
-      where: 'The palm of the hand, on the fleshy pad just below the fingers.' }
+      where: 'The palm.' }
   ]
 };
 /* =============================== */
@@ -405,7 +405,7 @@ function viewSiteIntro() {
       '<li>The participant keeps their eyes closed (or a blindfold on) for the whole test.</li>' +
       '<li>Touch for 1 to 2 seconds with light, equal pressure. Both points go down and come up together.</li>' +
       '<li>Line the two points up along the length of the limb. Use a slightly new spot on each trial.</li>' +
-      '<li>The participant says "one" or "two". You tap <b>1</b> if they were right and <b>0</b> if they were wrong.</li>' +
+      '<li>The participant says "one" or "two". You tap <b>Correct</b> or <b>Incorrect</b>.</li>' +
     '</ul>' +
     '<button class="primary" data-act="siteStart">Start ' + site.name.toLowerCase() + '</button>' +
     (DEMO ? '<p class="center"><button class="link" data-act="demoSite">Demo: fill this body part with simulated answers</button></p>' : '');
@@ -414,9 +414,9 @@ function viewSiteIntro() {
 function viewBlockIntro() {
   const p = state.pos, site = CONFIG.SITES[p.s], dist = site.distances[p.d];
   return headHtml(site.name + ' \u00b7 distance ' + (p.d + 1) + ' of ' + site.distances.length) +
-    '<p class="center">Set the two points</p>' +
+    '<p class="center">Pick up the</p>' +
     '<p class="center bigmm">' + dist + ' mm</p>' +
-    '<p class="center">apart. For the one-point trials, use a single tip.</p>' +
+    '<p class="center">two-point set. Use the single poker for the one-point trials.</p>' +
     '<button class="primary" data-act="blockReady">Ready: start ' + N + ' trials</button>' +
     '<p class="center"><button class="link" data-act="undo">Undo last</button></p>';
 }
@@ -427,14 +427,14 @@ function viewTrial() {
   const stim = block.seq[p.t];
   const dots = stim === 1 ? '<span></span>' : '<span></span><span></span>';
   const big = stim === 1 ? 'ONE point' : 'TWO points';
-  const sub = stim === 1 ? 'Use a single tip' : 'Use both tips, ' + dist + ' mm apart';
+  const sub = stim === 1 ? 'Use the single poker' : 'Use the ' + dist + ' mm set';
   return headHtml(site.name + ' \u00b7 distance ' + (p.d + 1) + ' of ' + site.distances.length + ' (' + dist + ' mm)') +
     '<div class="stim"><div class="dots" aria-hidden="true">' + dots + '</div>' +
       '<div class="big" id="stim-text">' + big + '</div><div class="sub">' + sub + '</div></div>' +
     '<p class="counter">Trial ' + (p.t + 1) + ' of ' + N + '</p>' +
     '<div class="answers">' +
-      '<button class="ok" data-act="ok" aria-keyshortcuts="1"><b>1</b>Correct</button>' +
-      '<button class="bad" data-act="bad" aria-keyshortcuts="0"><b>0</b>Incorrect</button>' +
+      '<button class="ok" data-act="ok" aria-keyshortcuts="1">Correct</button>' +
+      '<button class="bad" data-act="bad" aria-keyshortcuts="0">Incorrect</button>' +
     '</div>' +
     '<p class="center"><button class="link" data-act="undo">Undo last</button></p>';
 }
