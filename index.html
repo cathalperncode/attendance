@@ -215,7 +215,7 @@
     </section>
   </div>
 
-  <p class="fine">Checking in records your name, your answers, your device's location, and the time. Your instructor uses this for attendance. <span style="opacity:.6">v6</span></p>
+  <p class="fine">Checking in records your name, your answers, your device's location, and the time. Your instructor uses this for attendance. <span style="opacity:.6">v7</span></p>
 </main>
 
 <script>
@@ -378,7 +378,7 @@ $('form').addEventListener('submit', async (e) => {
 
   const params = {
     action: 'checkin',
-    sid: makeId(),
+    cid: makeId(),
     name: name,
     lat: fix ? String(fix.lat) : '',
     lon: fix ? String(fix.lon) : '',
