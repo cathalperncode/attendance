@@ -180,7 +180,7 @@
 <body>
 <main>
   <h1 id="title">Check in</h1>
-  <p class="lede">Type your name, answer the four questions in cm, and allow location when your browser asks.</p>
+  <p class="lede">Type your name, answer the three questions in cm, and allow location when your browser asks.</p>
 
   <div class="card">
     <form id="form" novalidate>
@@ -215,7 +215,7 @@
     </section>
   </div>
 
-  <p class="fine">Checking in records your name, your answers, your device's location, and the time. Your instructor uses this for attendance. <span style="opacity:.6">v7</span></p>
+  <p class="fine">Checking in records your name, your answers, your device's location, and the time. Your instructor uses this for attendance. <span style="opacity:.6">v8</span></p>
 </main>
 
 <script>
@@ -226,10 +226,9 @@ const CONFIG = {
   REQUIRE_LOCATION: true,                       // true = students can't check in without sharing location
   // Do not change the "key" values. They must match the Apps Script.
   QUESTIONS: [
-    { key: 'back',      short: 'back',          label: 'What was your detection threshold on your back?' },
-    { key: 'forearm',   short: 'right forearm', label: 'What was your detection threshold on your right forearm?' },
-    { key: 'hand',      short: 'back of hand',  label: 'What was your detection threshold on the back of your hand?' },
-    { key: 'fingertip', short: 'finger tip',    label: 'What was your detection threshold on your finger tip?' }
+    { key: 'shoulder', short: 'shoulder', label: 'What was your detection threshold on your shoulder?' },
+    { key: 'forearm',  short: 'forearm',  label: 'What was your detection threshold on your forearm?' },
+    { key: 'palm',     short: 'palm',     label: 'What was your detection threshold on your palm?' }
   ]
 };
 /* =============================== */
