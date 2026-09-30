@@ -116,6 +116,16 @@
   .thr { display: flex; justify-content: space-between; align-items: baseline; padding: 0.75rem 0; border-bottom: 1px solid var(--line); }
   .thr b { font-size: 1.5rem; }
   .note { color: var(--muted); font-size: 0.92rem; margin: 0.75rem 0 1rem; }
+  .savepanel { border: 1px solid var(--line); border-radius: 12px; padding: 0.6rem 0.9rem; margin-bottom: 1rem; font-size: 0.95rem; }
+  .savepanel:empty { display: none; }
+  .saveline { display: flex; gap: 0.6rem; align-items: flex-start; padding: 0.25rem 0; }
+  .saveline .ic { flex: none; width: 1.2rem; text-align: center; font-weight: 700; }
+  .saveline.ok .ic { color: var(--ok); }
+  .saveline.fail .ic { color: var(--bad); }
+  .saveline.busy .ic { color: var(--muted); }
+  .saveline .txt { flex: 1; min-width: 0; }
+  .saveline .acts { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.15rem; }
+  .saveline .link { padding: 0.2rem 0; font-size: 0.93rem; }
   .fine { margin: 1.25rem 0 0; font-size: 0.9rem; color: var(--muted); }
   [hidden] { display: none !important; }
 </style>
@@ -149,10 +159,11 @@
   </div>
 
   <div class="card" id="card-test" hidden>
+    <div id="savepanel" class="savepanel" role="status" aria-live="polite"></div>
     <div id="stage"></div>
   </div>
 
-  <p class="fine">Your names, student IDs, course section, trial results, device location, and the time are saved for your instructor. <span style="opacity:.6">v17</span></p>
+  <p class="fine">Your names, student IDs, course section, trial results, device location, and the time are saved for your instructor. <span style="opacity:.6">v18</span></p>
   <p class="fine center" id="restart-wrap" hidden><button type="button" class="link" id="restart">Start over</button></p>
 </main>
 
@@ -185,7 +196,7 @@ const CONFIG = {
 /* =============================== */
 
 const $ = (id) => document.getElementById(id);
-const STORE_KEY = 'psc-2pd-v13';
+const STORE_KEY = 'psc-2pd-v14';
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo') === '1';
 
@@ -282,7 +293,7 @@ function loadSaved() {
     const raw = localStorage.getItem(STORE_KEY);
     if (!raw) return null;
     const o = JSON.parse(raw);
-    if (!o || !o.state || o.state.v !== 13) return null;
+    if (!o || !o.state || o.state.v !== 14) return null;
     if (o.state.blocks.length !== CONFIG.SITES.length) return null;
     return o;
   } catch (e) { return null; }
@@ -368,8 +379,9 @@ $('form').addEventListener('submit', (e) => {
   const people = {};
   CONFIG.PEOPLE.forEach((f) => { people[f.key] = inputs[f.key].value.trim(); });
   state = {
-    v: 13,
+    v: 14,
     sent: {},
+    saves: {},
     cid: makeId(DEMO ? 'demo' : 'c'),
     demo: DEMO,
     people: people,
@@ -377,8 +389,8 @@ $('form').addEventListener('submit', (e) => {
     blocks: CONFIG.SITES.map((site) => site.distances.map(() => ({ seq: makeSequence(N, CONFIG.MAX_RUN), res: [] })))
   };
   save();
-  openSave(attendanceUrl());   // records attendance + location; a small confirmation opens in a new tab
   render();
+  performSave('signin', attendanceUrl());   // records attendance + location; the result shows in the panel above
 });
 
 /* ---------- test screens ---------- */
@@ -475,11 +487,12 @@ function viewResults() {
   });
   return headHtml('All done') +
     '<h2>Results</h2>' + rows +
-    '<p class="note">Each body part was saved when you tapped its save button. If a confirmation tab didn\u2019t open or said something went wrong, tap "Send again". Nothing is counted twice.</p>' +
+    '<p class="note">Each body part is saved when you tap its save button, and the panel above shows whether it worked. If anything says it wasn\u2019t confirmed, tap "Send again". Nothing is counted twice.</p>' +
     '<button class="primary secondary" data-act="newParticipant">Start a new participant</button>';
 }
 
 function render() {
+  renderSavePanel();
   const inTest = !!state;
   $('card-setup').hidden = inTest;
   $('card-test').hidden = !inTest;
@@ -577,6 +590,106 @@ function openSave(url) {
   } catch (e) {}
 }
 
+/* ---------- saving to the sheet, with the result shown inside the experiment ----------
+   saveMode is 'background' when a quick test at page load shows this browser can hear the sheet's reply.
+   If it can't, the page falls back to opening a small confirmation tab (the method that always worked). */
+let saveMode = 'unknown';
+
+function jsonp(url, timeoutMs) {
+  return new Promise((resolve, reject) => {
+    const cbName = '__cb' + Date.now() + Math.floor(Math.random() * 1e6);
+    const tag = document.createElement('script');
+    let finished = false;
+    let timer = null;
+    function finish(fn, value) {
+      if (finished) return;
+      finished = true;
+      clearTimeout(timer);
+      window[cbName] = function () {};
+      if (tag.parentNode) tag.parentNode.removeChild(tag);
+      fn(value);
+    }
+    window[cbName] = (data) => finish(resolve, data);
+    tag.onerror = () => finish(reject, new Error('load'));
+    timer = setTimeout(() => finish(reject, new Error('timeout')), timeoutMs);
+    tag.src = url + (url.indexOf('?') === -1 ? '?' : '&') + 'callback=' + cbName + '&_=' + Date.now();
+    document.head.appendChild(tag);
+  });
+}
+
+function probeSave() {
+  if (notConfigured) { saveMode = 'tab'; return; }
+  jsonp(CONFIG.SCRIPT_URL + (CONFIG.SCRIPT_URL.indexOf('?') === -1 ? '?' : '&') + 'ping=1', 10000)
+    .then((r) => { saveMode = (r && r.ok) ? 'background' : 'tab'; })
+    .catch(() => { saveMode = 'tab'; });
+}
+
+function saveLabel(key) {
+  if (key === 'signin') return 'Sign-in';
+  const site = CONFIG.SITES.find((s) => s.key === key);
+  return site ? site.name : key;
+}
+
+function urlFor(key) {
+  if (key === 'signin') return attendanceUrl();
+  const si = CONFIG.SITES.findIndex((s) => s.key === key);
+  return si === -1 ? '' : siteUrl(si);
+}
+
+function setSave(key, info) {
+  if (!state) return;
+  state.saves[key] = info;
+  save();
+  renderSavePanel();
+}
+
+function saveOkText(key, res) {
+  if (key === 'signin') {
+    return res.duplicate ? 'Already signed in.' : 'Signed in. Your attendance and location are saved' + (res.time ? ' (' + res.time + ').' : '.');
+  }
+  const si = CONFIG.SITES.findIndex((s) => s.key === key);
+  const n = res.saved ? res.saved.length : 0;
+  return CONFIG.SITES[si].name + ' saved: ' + thresholdLabel(si, siteThreshold(si)) + ' (' + n + ' of ' + nSites + ' body parts saved).';
+}
+
+function performSave(key, url) {
+  const label = saveLabel(key);
+  if (saveMode === 'tab') {
+    openSave(url);
+    setSave(key, { status: 'tab', text: label + ' sent. A confirmation opened in a new tab.' });
+    return;
+  }
+  setSave(key, { status: 'saving', text: 'Saving ' + label.toLowerCase() + '\u2026' });
+  jsonp(url, 15000).then((res) => {
+    if (res && res.ok) setSave(key, { status: 'ok', text: saveOkText(key, res) });
+    else if (res && res.error === 'closed') setSave(key, { status: 'fail', closed: true, text: 'Sign-in is closed. Ask your instructor.' });
+    else setSave(key, { status: 'fail', text: label + ' wasn\u2019t confirmed.' });
+  }).catch(() => {
+    setSave(key, { status: 'fail', text: label + ' wasn\u2019t confirmed.' });
+  });
+}
+
+function renderSavePanel() {
+  const el = $('savepanel');
+  if (!state) { el.innerHTML = ''; return; }
+  let html = '';
+  ['signin'].concat(CONFIG.SITES.map((s) => s.key)).forEach((key) => {
+    const s = state.saves && state.saves[key];
+    if (!s) return;
+    const ok = s.status === 'ok', fail = s.status === 'fail';
+    const ic = ok ? '\u2713' : fail ? '!' : s.status === 'tab' ? '\u2197' : '\u2026';
+    let acts = '';
+    if (fail && !s.closed) {
+      acts = '<div class="acts"><button type="button" class="link" data-act="retry" data-key="' + key + '">Try again</button>' +
+             '<a class="link" data-key="' + key + '" target="_blank" rel="noopener">Open confirmation in a new tab</a></div>';
+    }
+    html += '<div class="saveline ' + (ok ? 'ok' : fail ? 'fail' : 'busy') + '"><span class="ic" aria-hidden="true">' + ic + '</span>' +
+            '<div class="txt">' + s.text + acts + '</div></div>';
+  });
+  el.innerHTML = html;
+  el.querySelectorAll('a[data-key]').forEach((a) => { a.setAttribute('href', urlFor(a.dataset.key)); });
+}
+
 /* The address that saves ONE body part. Tapping Save opens it in a new tab; the script writes the
    rows and shows a plain-text confirmation. */
 function siteUrl(si) {
@@ -602,7 +715,7 @@ function act(name, arg) {
   else if (name === 'undo') { undo(); }
   else if (name === 'saveNext' && p.step === 'siteSummary') {
     // one button: save this body part's threshold, then move on
-    openSave(siteUrl(p.s));
+    performSave(CONFIG.SITES[p.s].key, siteUrl(p.s));
     state.sent[CONFIG.SITES[p.s].key] = true;
     if (p.s < nSites - 1) { p.s++; p.d = 0; p.t = 0; p.step = 'siteIntro'; }
     else { p.step = 'results'; }
@@ -610,7 +723,12 @@ function act(name, arg) {
   else if (name === 'demoSite' && DEMO && p.step === 'siteIntro') { demoFill(p.s); }
   else if (name === 'resave') {
     const si = Number(arg);
-    if (CONFIG.SITES[si]) openSave(siteUrl(si));
+    if (CONFIG.SITES[si]) performSave(CONFIG.SITES[si].key, siteUrl(si));
+    return;
+  }
+  else if (name === 'retry') {
+    const url = urlFor(arg);
+    if (url) performSave(arg, url);
     return;
   }
   else if (name === 'newParticipant') { resetToSetup(); return; }
@@ -626,10 +744,12 @@ function resetToSetup() {
   render();
 }
 
-$('stage').addEventListener('click', (e) => {
+function onActClick(e) {
   const b = e.target.closest('[data-act]');
-  if (b) act(b.dataset.act, b.dataset.site);
-});
+  if (b) act(b.dataset.act, b.dataset.site !== undefined ? b.dataset.site : b.dataset.key);
+}
+$('stage').addEventListener('click', onActClick);
+$('savepanel').addEventListener('click', onActClick);
 
 document.addEventListener('keydown', (e) => {
   if (!state || state.pos.step !== 'trial') return;
@@ -655,6 +775,10 @@ const saved = loadSaved();
 if (saved) {
   state = saved.state;
   fix = saved.fix;
+  state.saves = state.saves || {};
+  Object.keys(state.saves).forEach((k) => {
+    if (state.saves[k].status === 'saving') state.saves[k] = { status: 'fail', text: saveLabel(k) + ' wasn\u2019t confirmed.' };
+  });
   if (state.people) CONFIG.PEOPLE.forEach((f) => { inputs[f.key].value = state.people[f.key] || ''; });
   setLoc(fix ? 'ok' : 'bad', fix ? 'Location found' : 'Location not shared', fix ? 'Accurate to about ' + Math.round(fix.acc) + ' m.' : 'Tap Try again.', !fix);
   refresh();
@@ -663,6 +787,7 @@ if (saved) {
   render();
   locate();
 }
+probeSave();
 </script>
 </body>
 </html>
