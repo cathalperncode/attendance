@@ -180,7 +180,7 @@
 <body>
 <main>
   <h1 id="title">Check in</h1>
-  <p class="lede">Fill in the four details, answer the three questions in cm, and allow location when your browser asks.</p>
+  <p class="lede">Fill in the five details, answer the three questions in cm, and allow location when your browser asks.</p>
 
   <div class="card">
     <form id="form" novalidate>
@@ -212,7 +212,7 @@
     </section>
   </div>
 
-  <p class="fine">Checking in records your name, your answers, your device's location, and the time. Your instructor uses this for attendance. <span style="opacity:.6">v9</span></p>
+  <p class="fine">Checking in records your name, your answers, your device's location, and the time. Your instructor uses this for attendance. <span style="opacity:.6">v10</span></p>
 </main>
 
 <script>
@@ -223,6 +223,7 @@ const CONFIG = {
   REQUIRE_LOCATION: true,                       // true = students can't check in without sharing location
   // Do not change the "key" values. They must match the Apps Script.
   PEOPLE: [
+    { key: 'course_section',  short: 'course section',         label: 'Course Section',          min: 1, max: 30 },
     { key: 'experimenter',    short: 'experimenter name',       label: 'Experimenter Name',       min: 1, max: 100 },
     { key: 'experimenter_no', short: 'experimenter student ID', label: 'Experimenter Student ID', min: 3, max: 20 },
     { key: 'participant',     short: 'participant name',        label: 'Participant Name',        min: 1, max: 100 },
@@ -250,7 +251,7 @@ const notConfigured = CONFIG.SCRIPT_URL.indexOf('PASTE_YOUR') === 0;
 document.title = 'Check in to ' + CONFIG.CLASS_LABEL;
 $('title').textContent = 'Check in to ' + CONFIG.CLASS_LABEL;
 
-/* Build the four detail fields (names and student IDs) */
+/* Build the detail fields (course section, names, student IDs) */
 const inputs = {};
 CONFIG.PEOPLE.forEach((f) => {
   const wrap = document.createElement('div');
