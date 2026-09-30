@@ -180,14 +180,11 @@
 <body>
 <main>
   <h1 id="title">Check in</h1>
-  <p class="lede">Type your name, answer the three questions in cm, and allow location when your browser asks.</p>
+  <p class="lede">Fill in the four details, answer the three questions in cm, and allow location when your browser asks.</p>
 
   <div class="card">
     <form id="form" novalidate>
-      <div class="field">
-        <label for="name">Your name</label>
-        <input id="name" type="text" autocomplete="name" maxlength="100" required>
-      </div>
+      <div id="people"></div>
 
       <div id="questions"></div>
 
@@ -215,7 +212,7 @@
     </section>
   </div>
 
-  <p class="fine">Checking in records your name, your answers, your device's location, and the time. Your instructor uses this for attendance. <span style="opacity:.6">v8</span></p>
+  <p class="fine">Checking in records your name, your answers, your device's location, and the time. Your instructor uses this for attendance. <span style="opacity:.6">v9</span></p>
 </main>
 
 <script>
@@ -225,6 +222,12 @@ const CONFIG = {
   CLASS_LABEL: 'PSC 131',                       // shown in the page title
   REQUIRE_LOCATION: true,                       // true = students can't check in without sharing location
   // Do not change the "key" values. They must match the Apps Script.
+  PEOPLE: [
+    { key: 'experimenter',    short: 'experimenter name',       label: 'Experimenter Name',       min: 1, max: 100 },
+    { key: 'experimenter_no', short: 'experimenter student ID', label: 'Experimenter Student ID', min: 3, max: 20 },
+    { key: 'participant',     short: 'participant name',        label: 'Participant Name',        min: 1, max: 100 },
+    { key: 'participant_no',  short: 'participant student ID',  label: 'Participant Student ID',  min: 3, max: 20 }
+  ],
   QUESTIONS: [
     { key: 'shoulder', short: 'shoulder', label: 'What was your detection threshold on your shoulder?' },
     { key: 'forearm',  short: 'forearm',  label: 'What was your detection threshold on your forearm?' },
@@ -234,7 +237,6 @@ const CONFIG = {
 /* =============================== */
 
 const $ = (id) => document.getElementById(id);
-const nameInput = $('name');
 const submitBtn = $('submit');
 const msg = $('msg');
 const hint = $('hint');
@@ -248,8 +250,27 @@ const notConfigured = CONFIG.SCRIPT_URL.indexOf('PASTE_YOUR') === 0;
 document.title = 'Check in to ' + CONFIG.CLASS_LABEL;
 $('title').textContent = 'Check in to ' + CONFIG.CLASS_LABEL;
 
-/* Build the question fields */
+/* Build the four detail fields (names and student IDs) */
 const inputs = {};
+CONFIG.PEOPLE.forEach((f) => {
+  const wrap = document.createElement('div');
+  wrap.className = 'field';
+  const lab = document.createElement('label');
+  lab.htmlFor = 'f-' + f.key;
+  lab.textContent = f.label;
+  const inp = document.createElement('input');
+  inp.type = 'text';
+  inp.id = 'f-' + f.key;
+  inp.autocomplete = 'off';
+  inp.maxLength = f.max;
+  inp.addEventListener('input', refresh);
+  wrap.appendChild(lab);
+  wrap.appendChild(inp);
+  $('people').appendChild(wrap);
+  inputs[f.key] = inp;
+});
+
+/* Build the question fields */
 CONFIG.QUESTIONS.forEach((q) => {
   const wrap = document.createElement('div');
   wrap.className = 'field';
@@ -292,7 +313,9 @@ function parseCm(text) {
 
 function missingItems() {
   const m = [];
-  if (!nameInput.value.trim()) m.push('name');
+  CONFIG.PEOPLE.forEach((f) => {
+    if (inputs[f.key].value.trim().length < f.min) m.push(f.short);
+  });
   CONFIG.QUESTIONS.forEach((q) => {
     if (parseCm(inputs[q.key].value) === null) m.push(q.short);
   });
@@ -361,7 +384,6 @@ $('form').addEventListener('submit', async (e) => {
   e.preventDefault();
   if (sending || missingItems().length > 0) return;
 
-  const name = nameInput.value.trim();
   sending = true;
   submitBtn.textContent = 'Sending\u2026';
   msg.textContent = '';
@@ -378,11 +400,11 @@ $('form').addEventListener('submit', async (e) => {
   const params = {
     action: 'checkin',
     cid: makeId(),
-    name: name,
     lat: fix ? String(fix.lat) : '',
     lon: fix ? String(fix.lon) : '',
     acc: fix ? String(fix.acc) : ''
   };
+  CONFIG.PEOPLE.forEach((f) => { params[f.key] = inputs[f.key].value.trim(); });
   CONFIG.QUESTIONS.forEach((q) => { params[q.key] = String(parseCm(inputs[q.key].value)); });
 
   const q = new URLSearchParams(params);
@@ -395,7 +417,6 @@ $('form').addEventListener('submit', async (e) => {
   }, 8000);
 });
 
-nameInput.addEventListener('input', refresh);
 retryBtn.addEventListener('click', locate);
 
 if (notConfigured) {
