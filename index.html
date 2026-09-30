@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Class check-in</title>
+<title>Two-point discrimination</title>
 <style>
   :root {
     --bg: #edf2f3;
@@ -45,148 +45,89 @@
     justify-content: center;
     align-items: flex-start;
   }
-  main {
-    width: 100%;
-    max-width: 30rem;
-    margin-top: 4vh;
-  }
-  h1 {
-    font-size: 2rem;
-    line-height: 1.15;
-    font-weight: 650;
-    letter-spacing: -0.015em;
-    margin: 0 0 0.5rem;
-  }
-  .lede { margin: 0 0 1.75rem; color: var(--muted); }
-  .card {
-    background: var(--card);
-    border: 1px solid var(--line);
-    border-radius: 16px;
-    padding: 1.5rem;
-  }
+  main { width: 100%; max-width: 30rem; margin-top: 3vh; }
+  h1 { font-size: 2rem; line-height: 1.15; font-weight: 650; letter-spacing: -0.015em; margin: 0 0 0.5rem; }
+  h2 { font-size: 1.5rem; line-height: 1.2; letter-spacing: -0.01em; margin: 0 0 0.5rem; }
+  .lede { margin: 0 0 1.5rem; color: var(--muted); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 1.5rem; }
   .field { margin-bottom: 1.25rem; }
   label { display: block; font-weight: 600; margin-bottom: 0.4rem; }
-  .field-row { position: relative; }
   input[type="text"] {
-    width: 100%;
-    font: inherit;
-    color: inherit;
-    background: transparent;
-    border: 1.5px solid var(--line);
-    border-radius: 10px;
-    padding: 0.75rem 0.85rem;
+    width: 100%; font: inherit; color: inherit; background: transparent;
+    border: 1.5px solid var(--line); border-radius: 10px; padding: 0.75rem 0.85rem;
   }
-  .field-row input { padding-right: 3.25rem; }
-  .unit {
-    position: absolute;
-    right: 0.9rem;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--muted);
-    pointer-events: none;
-  }
-  input[type="text"]:focus-visible,
-  button:focus-visible {
-    outline: 3px solid var(--accent);
-    outline-offset: 2px;
-  }
+  input[type="text"]:focus-visible, button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 
-  .loc {
-    display: flex;
-    align-items: center;
-    gap: 0.9rem;
-    margin: 1.75rem 0 1.5rem;
-    padding: 1rem;
-    border: 1px solid var(--line);
-    border-radius: 12px;
-  }
-  .ring {
-    flex: none;
-    width: 2.75rem;
-    height: 2.75rem;
-    border-radius: 50%;
-    border: 3px solid var(--line);
-    display: grid;
-    place-items: center;
-  }
-  .ring svg {
-    display: none;
-    width: 1.4rem;
-    height: 1.4rem;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 2.4;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-  }
-  .loc[data-state="busy"] .ring {
-    border-top-color: var(--accent);
-    animation: spin 0.9s linear infinite;
-  }
+  .loc { display: flex; align-items: center; gap: 0.9rem; margin: 1.75rem 0 1.5rem; padding: 1rem; border: 1px solid var(--line); border-radius: 12px; }
+  .ring { flex: none; width: 2.75rem; height: 2.75rem; border-radius: 50%; border: 3px solid var(--line); display: grid; place-items: center; }
+  .ring svg { display: none; width: 1.4rem; height: 1.4rem; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+  .loc[data-state="busy"] .ring { border-top-color: var(--accent); animation: spin 0.9s linear infinite; }
   .loc[data-state="ok"] .ring { background: var(--ok); border-color: var(--ok); color: #fff; }
   .loc[data-state="ok"] .i-ok { display: block; }
   .loc[data-state="bad"] .ring { border-color: var(--bad); color: var(--bad); }
   .loc[data-state="bad"] .i-bad { display: block; }
   @keyframes spin { to { transform: rotate(360deg); } }
-  @media (prefers-reduced-motion: reduce) {
-    .loc[data-state="busy"] .ring { animation: none; }
-  }
+  @media (prefers-reduced-motion: reduce) { .loc[data-state="busy"] .ring { animation: none; } }
   .loc-text { flex: 1; min-width: 0; }
   .loc-text strong { display: block; }
   .loc-text span { display: block; color: var(--muted); font-size: 0.95rem; }
   .link {
-    flex: none;
-    font: inherit;
-    font-weight: 600;
-    color: var(--accent);
-    background: none;
-    border: 0;
-    padding: 0.4rem 0.2rem;
-    cursor: pointer;
-    text-decoration: underline;
-    text-underline-offset: 3px;
+    flex: none; font: inherit; font-weight: 600; color: var(--accent); background: none; border: 0;
+    padding: 0.4rem 0.2rem; cursor: pointer; text-decoration: underline; text-underline-offset: 3px;
   }
 
-  #submit {
-    width: 100%;
-    font: inherit;
-    font-weight: 650;
-    color: var(--accent-ink);
-    background: var(--accent);
-    border: 0;
-    border-radius: 10px;
-    padding: 0.9rem 1rem;
-    cursor: pointer;
+  #submit, .primary {
+    width: 100%; font: inherit; font-weight: 650; color: var(--accent-ink); background: var(--accent);
+    border: 0; border-radius: 10px; padding: 0.9rem 1rem; cursor: pointer;
   }
-  #submit:disabled { opacity: 0.4; cursor: not-allowed; }
+  #submit:disabled, .primary:disabled { opacity: 0.4; cursor: not-allowed; }
+  a.linkbtn { display: block; text-align: center; text-decoration: none; }
+  .primary.secondary { background: transparent; color: var(--accent); border: 2px solid var(--accent); margin-top: 0.25rem; }
+  .rowbtn { margin: 0.5rem 0 0.25rem; }
   #hint { margin: 0.75rem 0 0; font-size: 0.92rem; color: var(--muted); }
   #hint:empty { display: none; }
   #msg { margin: 0.9rem 0 0; color: var(--bad); font-weight: 600; }
   #msg:empty { display: none; }
 
-  #done { text-align: left; }
-  #done .tick {
-    width: 3.25rem; height: 3.25rem; border-radius: 50%;
-    background: var(--ok); color: #fff; display: grid; place-items: center; margin-bottom: 1rem;
+  .stage-head { display: flex; justify-content: space-between; gap: 1rem; color: var(--muted); font-size: 0.95rem; margin-bottom: 0.5rem; }
+  .bar { height: 6px; background: var(--line); border-radius: 99px; overflow: hidden; margin-bottom: 1.25rem; }
+  .bar > i { display: block; height: 100%; background: var(--accent); }
+  .tips { margin: 0.75rem 0 1.25rem; padding-left: 1.2rem; color: var(--muted); }
+  .tips li { margin-bottom: 0.25rem; }
+  .bigmm { font-size: 3rem; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; margin: 0.25rem 0 0.5rem; }
+  .stim { border: 2px solid var(--accent); border-radius: 16px; padding: 1.4rem 1rem; text-align: center; margin-bottom: 1rem; }
+  .stim .dots { display: flex; justify-content: center; gap: 0.6rem; margin-bottom: 0.6rem; min-height: 1rem; }
+  .stim .dots span { width: 1rem; height: 1rem; border-radius: 50%; background: var(--ink); }
+  .stim .big { font-size: 2.3rem; font-weight: 700; letter-spacing: -0.01em; line-height: 1.1; }
+  .stim .sub { color: var(--muted); margin-top: 0.35rem; }
+  .counter { text-align: center; color: var(--muted); margin: 0 0 0.5rem; }
+  .answers { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin: 0.75rem 0; }
+  .answers button {
+    font: inherit; font-weight: 700; font-size: 1.2rem; padding: 1.2rem 0.5rem; border-radius: 12px;
+    border: 2px solid var(--line); background: transparent; color: var(--ink); cursor: pointer;
   }
-  #done .tick svg { width: 1.7rem; height: 1.7rem; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
-  #done h2 { margin: 0 0 0.35rem; font-size: 1.5rem; letter-spacing: -0.01em; }
-  #done p { margin: 0; color: var(--muted); }
-
+  .answers .ok { border-color: var(--ok); color: var(--ok); }
+  .answers .bad { border-color: var(--bad); color: var(--bad); }
+  .answers button b { font-size: 1.8rem; display: block; line-height: 1.1; }
+  .center { text-align: center; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.93rem; margin: 0.75rem 0; }
+  th, td { text-align: left; padding: 0.4rem 0.3rem; border-bottom: 1px solid var(--line); }
+  th { color: var(--muted); font-weight: 600; }
+  .thr { display: flex; justify-content: space-between; align-items: baseline; padding: 0.75rem 0; border-bottom: 1px solid var(--line); }
+  .thr b { font-size: 1.5rem; }
+  .note { color: var(--muted); font-size: 0.92rem; margin: 0.75rem 0 1rem; }
   .fine { margin: 1.25rem 0 0; font-size: 0.9rem; color: var(--muted); }
   [hidden] { display: none !important; }
 </style>
 </head>
 <body>
 <main>
-  <h1 id="title">Check in</h1>
-  <p class="lede">Fill in the five details, answer the three questions in cm, and allow location when your browser asks.</p>
+  <h1 id="title">Two-point discrimination</h1>
+  <p class="lede" id="lede">Fill in the five details and allow location. Then you'll test three body parts, entering each trial as you go.</p>
 
-  <div class="card">
+  <div class="card" id="card-setup">
     <form id="form" novalidate>
       <div id="people"></div>
-
-      <div id="questions"></div>
 
       <div class="loc" id="loc" data-state="busy" role="status" aria-live="polite">
         <div class="ring" aria-hidden="true">
@@ -200,27 +141,28 @@
         <button type="button" class="link" id="retry" hidden>Try again</button>
       </div>
 
-      <button type="submit" id="submit" disabled>Check in</button>
+      <button type="submit" id="submit" disabled>Start testing</button>
       <p id="hint"></p>
       <p id="msg" role="alert"></p>
     </form>
-
-    <section id="done" hidden>
-      <div class="tick" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></svg></div>
-      <h2>Check-in sent</h2>
-      <p id="done-detail"></p>
-    </section>
   </div>
 
-  <p class="fine">Checking in records your name, your answers, your device's location, and the time. Your instructor uses this for attendance. <span style="opacity:.6">v10</span></p>
+  <div class="card" id="card-test" hidden>
+    <div id="stage"></div>
+  </div>
+
+  <p class="fine">Your names, student IDs, course section, trial results, device location, and the time are saved for your instructor. <span style="opacity:.6">v12</span></p>
+  <p class="fine center" id="restart-wrap" hidden><button type="button" class="link" id="restart">Start over</button></p>
 </main>
 
 <script>
 /* ===== Edit these settings ===== */
 const CONFIG = {
   SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbyWVAC9IDswOxlJvyZU7XiuH-3QN-rc9-7pJwHWPo19wgz2jSaJLouImfOV0rCTWeCvZA/exec',  // the Web app URL from Apps Script (ends in /exec)
-  CLASS_LABEL: 'PSC 131',                       // shown in the page title
-  REQUIRE_LOCATION: true,                       // true = students can't check in without sharing location
+  REQUIRE_LOCATION: true,        // true = testing can't start without sharing location
+  TRIALS_PER_DISTANCE: 20,       // must be even: half one-point trials, half two-point trials
+  MAX_RUN: 3,                    // never more than this many of the same trial type in a row
+  CRITERION: 0.75,               // the threshold is where accuracy crosses this
   // Do not change the "key" values. They must match the Apps Script.
   PEOPLE: [
     { key: 'course_section',  short: 'course section',         label: 'Course Section',          min: 1, max: 30 },
@@ -229,29 +171,126 @@ const CONFIG = {
     { key: 'participant',     short: 'participant name',        label: 'Participant Name',        min: 1, max: 100 },
     { key: 'participant_no',  short: 'participant student ID',  label: 'Participant Student ID',  min: 3, max: 20 }
   ],
-  QUESTIONS: [
-    { key: 'shoulder', short: 'shoulder', label: 'What was your detection threshold on your shoulder?' },
-    { key: 'forearm',  short: 'forearm',  label: 'What was your detection threshold on your forearm?' },
-    { key: 'palm',     short: 'palm',     label: 'What was your detection threshold on your palm?' }
+  // Distances in mm, largest to smallest. Only six different settings are used in total.
+  SITES: [
+    { key: 'shoulder', name: 'Shoulder', distances: [60, 45, 30, 20],
+      where: 'The back of the shoulder, about 3 to 5 cm to the side of the spine, near the base of the neck.' },
+    { key: 'forearm',  name: 'Forearm',  distances: [45, 30, 20, 10],
+      where: 'The inner (palm-side) surface of the forearm, about halfway between the wrist and the elbow.' },
+    { key: 'palm',     name: 'Palm',     distances: [30, 20, 10, 5],
+      where: 'The palm of the hand, on the fleshy pad just below the fingers.' }
   ]
 };
 /* =============================== */
 
 const $ = (id) => document.getElementById(id);
+const STORE_KEY = 'psc-2pd-v12';
+const params = new URLSearchParams(location.search);
+const DEMO = params.get('demo') === '1';
+
 const submitBtn = $('submit');
 const msg = $('msg');
 const hint = $('hint');
 const retryBtn = $('retry');
 
-let fix = null;       // { lat, lon, acc } once the browser returns a position
-let sending = false;
+let fix = null;      // { lat, lon, acc } once the browser returns a position
+let state = null;    // null until testing starts
 
 const notConfigured = CONFIG.SCRIPT_URL.indexOf('PASTE_YOUR') === 0;
+const N = CONFIG.TRIALS_PER_DISTANCE;
 
-document.title = 'Check in to ' + CONFIG.CLASS_LABEL;
-$('title').textContent = 'Check in to ' + CONFIG.CLASS_LABEL;
+/* ---------- small helpers ---------- */
+function randInt(n) {
+  if (window.crypto && window.crypto.getRandomValues) {
+    const a = new Uint32Array(1);
+    window.crypto.getRandomValues(a);
+    return a[0] % n;
+  }
+  return Math.floor(Math.random() * n);
+}
 
-/* Build the detail fields (course section, names, student IDs) */
+function maxRunOf(arr) {
+  let best = 0, run = 0, prev = null;
+  arr.forEach((v) => { run = (v === prev) ? run + 1 : 1; prev = v; if (run > best) best = run; });
+  return best;
+}
+
+/* Half ones (1 = one point), half twos (2 = two points), shuffled, no long runs. */
+function makeSequence(n, maxRun) {
+  for (let attempt = 0; attempt < 2000; attempt++) {
+    const arr = [];
+    for (let i = 0; i < n / 2; i++) { arr.push(1); arr.push(2); }
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = randInt(i + 1);
+      const tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+    }
+    if (maxRunOf(arr) <= maxRun) return arr;
+  }
+  return Array.from({ length: n }, (_, i) => (i % 2) + 1);
+}
+
+function makeId(prefix) {
+  return (prefix || 'c') + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+}
+
+/* ---------- threshold estimate ----------
+   Going from the largest distance down, find the last distance where accuracy is still at or
+   above the criterion (with every larger distance also at or above it). Then interpolate to
+   where accuracy crosses the criterion between that distance and the next one down. */
+function estimateThreshold(dists, correctCounts, n, criterion) {
+  const acc = correctCounts.map((c) => c / n);
+  let last = -1;
+  for (let i = 0; i < acc.length; i++) {
+    if (acc[i] >= criterion) last = i; else break;
+  }
+  if (last === -1) return { kind: 'above', value: null, text: '>' + dists[0] };
+  if (last === acc.length - 1) return { kind: 'below', value: null, text: '<' + dists[dists.length - 1] };
+  const a1 = acc[last], a2 = acc[last + 1], d1 = dists[last], d2 = dists[last + 1];
+  const v = Math.round((d1 + ((criterion - a1) / (a2 - a1)) * (d2 - d1)) * 10) / 10;
+  return { kind: 'interpolated', value: v, text: String(v) };
+}
+
+function blockStats(block) {
+  let correct = 0, twoN = 0, twoRight = 0, oneN = 0, oneWrong = 0;
+  block.res.forEach((r, i) => {
+    correct += r;
+    if (block.seq[i] === 2) { twoN++; twoRight += r; } else { oneN++; oneWrong += (1 - r); }
+  });
+  return { correct, n: block.res.length, twoN, twoRight, oneN, oneWrong };
+}
+
+function siteThreshold(si) {
+  const site = CONFIG.SITES[si];
+  const counts = state.blocks[si].map((b) => blockStats(b).correct);
+  return estimateThreshold(site.distances, counts, N, CONFIG.CRITERION);
+}
+
+function thresholdLabel(si, t) {
+  const site = CONFIG.SITES[si];
+  if (t.kind === 'interpolated') return t.value + ' mm';
+  if (t.kind === 'above') return 'above ' + site.distances[0] + ' mm';
+  return 'below ' + site.distances[site.distances.length - 1] + ' mm';
+}
+
+/* ---------- saving progress on this device ---------- */
+function save() {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify({ state: state, fix: fix })); } catch (e) {}
+}
+function loadSaved() {
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (!raw) return null;
+    const o = JSON.parse(raw);
+    if (!o || !o.state || o.state.v !== 12) return null;
+    if (o.state.blocks.length !== CONFIG.SITES.length) return null;
+    return o;
+  } catch (e) { return null; }
+}
+function clearSaved() {
+  try { localStorage.removeItem(STORE_KEY); } catch (e) {}
+}
+
+/* ---------- setup screen ---------- */
 const inputs = {};
 CONFIG.PEOPLE.forEach((f) => {
   const wrap = document.createElement('div');
@@ -271,54 +310,10 @@ CONFIG.PEOPLE.forEach((f) => {
   inputs[f.key] = inp;
 });
 
-/* Build the question fields */
-CONFIG.QUESTIONS.forEach((q) => {
-  const wrap = document.createElement('div');
-  wrap.className = 'field';
-
-  const lab = document.createElement('label');
-  lab.htmlFor = 'q-' + q.key;
-  lab.textContent = q.label;
-
-  const row = document.createElement('div');
-  row.className = 'field-row';
-
-  const inp = document.createElement('input');
-  inp.type = 'text';
-  inp.id = 'q-' + q.key;
-  inp.inputMode = 'decimal';
-  inp.autocomplete = 'off';
-  inp.maxLength = 8;
-  inp.addEventListener('input', refresh);
-
-  const unit = document.createElement('span');
-  unit.className = 'unit';
-  unit.textContent = 'cm';
-  unit.setAttribute('aria-hidden', 'true');
-
-  row.appendChild(inp);
-  row.appendChild(unit);
-  wrap.appendChild(lab);
-  wrap.appendChild(row);
-  $('questions').appendChild(wrap);
-  inputs[q.key] = inp;
-});
-
-/* Accepts 7.5, 7,5, .5, 10 (between 0 and 100). Returns a number or null. */
-function parseCm(text) {
-  const s = String(text).trim().replace(',', '.');
-  if (!/^(\d+(\.\d*)?|\.\d+)$/.test(s)) return null;
-  const n = parseFloat(s);
-  return (isFinite(n) && n >= 0 && n <= 100) ? n : null;
-}
-
 function missingItems() {
   const m = [];
   CONFIG.PEOPLE.forEach((f) => {
     if (inputs[f.key].value.trim().length < f.min) m.push(f.short);
-  });
-  CONFIG.QUESTIONS.forEach((q) => {
-    if (parseCm(inputs[q.key].value) === null) m.push(q.short);
   });
   if (CONFIG.REQUIRE_LOCATION && !fix) m.push('location');
   return m;
@@ -326,12 +321,12 @@ function missingItems() {
 
 function refresh() {
   const m = missingItems();
-  submitBtn.disabled = sending || notConfigured || m.length > 0;
-  hint.textContent = (m.length && !sending) ? 'Still needed: ' + m.join(', ') + '.' : '';
+  submitBtn.disabled = notConfigured || m.length > 0;
+  hint.textContent = m.length ? 'Still needed: ' + m.join(', ') + '.' : '';
 }
 
-function setLoc(state, title, detail, showRetry) {
-  $('loc').dataset.state = state;
+function setLoc(stateName, title, detail, showRetry) {
+  $('loc').dataset.state = stateName;
   $('loc-title').textContent = title;
   $('loc-detail').textContent = detail;
   retryBtn.hidden = !showRetry;
@@ -350,6 +345,7 @@ function locate() {
       fix = { lat: pos.coords.latitude, lon: pos.coords.longitude, acc: pos.coords.accuracy };
       setLoc('ok', 'Location found', 'Accurate to about ' + Math.round(fix.acc) + ' m.', false);
       refresh();
+      if (state) save();
     },
     (err) => {
       if (err.code === 1) {
@@ -365,57 +361,282 @@ function locate() {
   );
 }
 
-function showDone(name, time) {
-  $('form').hidden = true;
-  $('done').hidden = false;
-  $('done-detail').textContent = name + ', sent at ' + (time || 'just now') + '.';
-}
-
-/* Sends the check-in by opening your script address in this tab, the same thing that worked when
-   you pasted the address into a browser. The script saves the row and shows a confirmation page. */
-function go(url) {
-  window.location.assign(url);
-}
-
-function makeId() {
-  return 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
-}
-
-$('form').addEventListener('submit', async (e) => {
+$('form').addEventListener('submit', (e) => {
   e.preventDefault();
-  if (sending || missingItems().length > 0) return;
+  if (missingItems().length > 0) return;
+  const people = {};
+  CONFIG.PEOPLE.forEach((f) => { people[f.key] = inputs[f.key].value.trim(); });
+  state = {
+    v: 12,
+    sent: {},
+    cid: makeId(DEMO ? 'demo' : 'c'),
+    demo: DEMO,
+    people: people,
+    pos: { s: 0, d: 0, t: 0, step: 'siteIntro' },
+    blocks: CONFIG.SITES.map((site) => site.distances.map(() => ({ seq: makeSequence(N, CONFIG.MAX_RUN), res: [] })))
+  };
+  save();
+  render();
+});
 
-  sending = true;
-  submitBtn.textContent = 'Sending\u2026';
-  msg.textContent = '';
-  refresh();
+/* ---------- test screens ---------- */
+const nSites = CONFIG.SITES.length;
+const totalTrials = CONFIG.SITES.reduce((sum, s) => sum + s.distances.length * N, 0);
 
-  if (navigator.onLine === false) {
-    msg.textContent = 'You appear to be offline. Reconnect, then tap Check in again.';
-    sending = false;
-    submitBtn.textContent = 'Check in';
-    refresh();
+function doneTrials() {
+  let n = 0;
+  state.blocks.forEach((site) => site.forEach((b) => { n += b.res.length; }));
+  return n;
+}
+
+function headHtml(label) {
+  const done = doneTrials();
+  const pct = Math.round((done / totalTrials) * 100);
+  return '<div class="stage-head"><span>' + label + '</span><span>' + done + ' of ' + totalTrials + ' trials</span></div>' +
+         '<div class="bar"><i style="width:' + pct + '%"></i></div>';
+}
+
+function viewSiteIntro() {
+  const p = state.pos, site = CONFIG.SITES[p.s];
+  return headHtml('Body part ' + (p.s + 1) + ' of ' + nSites) +
+    '<h2>' + site.name + '</h2>' +
+    '<p>' + site.where + '</p>' +
+    '<ul class="tips">' +
+      '<li>The participant keeps their eyes closed (or a blindfold on) for the whole test.</li>' +
+      '<li>Touch for 1 to 2 seconds with light, equal pressure. Both points go down and come up together.</li>' +
+      '<li>Line the two points up along the length of the limb. Use a slightly new spot on each trial.</li>' +
+      '<li>The participant says "one" or "two". You tap <b>1</b> if they were right and <b>0</b> if they were wrong.</li>' +
+    '</ul>' +
+    '<button class="primary" data-act="siteStart">Start ' + site.name.toLowerCase() + '</button>' +
+    (DEMO ? '<p class="center"><button class="link" data-act="demoSite">Demo: fill this body part with simulated answers</button></p>' : '');
+}
+
+function viewBlockIntro() {
+  const p = state.pos, site = CONFIG.SITES[p.s], dist = site.distances[p.d];
+  return headHtml(site.name + ' \u00b7 distance ' + (p.d + 1) + ' of ' + site.distances.length) +
+    '<p class="center">Set the two points</p>' +
+    '<p class="center bigmm">' + dist + ' mm</p>' +
+    '<p class="center">apart. For the one-point trials, use a single tip.</p>' +
+    '<button class="primary" data-act="blockReady">Ready: start ' + N + ' trials</button>' +
+    '<p class="center"><button class="link" data-act="undo">Undo last</button></p>';
+}
+
+function viewTrial() {
+  const p = state.pos, site = CONFIG.SITES[p.s], dist = site.distances[p.d];
+  const block = state.blocks[p.s][p.d];
+  const stim = block.seq[p.t];
+  const dots = stim === 1 ? '<span></span>' : '<span></span><span></span>';
+  const big = stim === 1 ? 'ONE point' : 'TWO points';
+  const sub = stim === 1 ? 'Use a single tip' : 'Use both tips, ' + dist + ' mm apart';
+  return headHtml(site.name + ' \u00b7 distance ' + (p.d + 1) + ' of ' + site.distances.length + ' (' + dist + ' mm)') +
+    '<div class="stim"><div class="dots" aria-hidden="true">' + dots + '</div>' +
+      '<div class="big" id="stim-text">' + big + '</div><div class="sub">' + sub + '</div></div>' +
+    '<p class="counter">Trial ' + (p.t + 1) + ' of ' + N + '</p>' +
+    '<div class="answers">' +
+      '<button class="ok" data-act="ok" aria-keyshortcuts="1"><b>1</b>Correct</button>' +
+      '<button class="bad" data-act="bad" aria-keyshortcuts="0"><b>0</b>Incorrect</button>' +
+    '</div>' +
+    '<p class="center"><button class="link" data-act="undo">Undo last</button></p>';
+}
+
+function siteTable(si) {
+  const site = CONFIG.SITES[si];
+  let rows = '';
+  state.blocks[si].forEach((b, d) => {
+    const s = blockStats(b);
+    rows += '<tr><td>' + site.distances[d] + ' mm</td><td>' + s.correct + '/' + s.n + ' (' + Math.round((s.correct / Math.max(s.n, 1)) * 100) + '%)</td>' +
+            '<td>' + s.twoRight + '/' + s.twoN + '</td><td>' + s.oneWrong + '/' + s.oneN + '</td></tr>';
+  });
+  return '<table><thead><tr><th>Distance</th><th>Correct</th><th>Two-point right</th><th>One-point wrong</th></tr></thead><tbody>' + rows + '</tbody></table>';
+}
+
+function saveHtml(si) {
+  const site = CONFIG.SITES[si];
+  const sent = !!state.sent[site.key];
+  return '<a class="primary linkbtn" data-act="save" data-site="' + si + '" target="_blank" rel="noopener">' +
+         (sent ? 'Saved \u2713 (tap to save again)' : 'Save ' + site.name.toLowerCase() + ' to the sheet') + '</a>';
+}
+
+function viewSiteSummary() {
+  const p = state.pos, site = CONFIG.SITES[p.s];
+  const t = siteThreshold(p.s);
+  const last = p.s === nSites - 1;
+  const sent = !!state.sent[site.key];
+  return headHtml(site.name + ' finished') +
+    '<h2>' + site.name + ' threshold</h2>' +
+    '<div class="thr"><span>Estimated threshold</span><b>' + thresholdLabel(p.s, t) + '</b></div>' +
+    siteTable(p.s) +
+    '<p class="note">Threshold is where accuracy crosses ' + Math.round(CONFIG.CRITERION * 100) + '%, worked out between the distances you tested.</p>' +
+    saveHtml(p.s) +
+    '<p class="note">Saving opens a confirmation in a new tab. Close it and come back here.' + (sent ? '' : ' You can also save later from the results screen.') + '</p>' +
+    '<button class="primary secondary" data-act="nextSite">' + (last ? 'See all results' : 'Next: ' + CONFIG.SITES[p.s + 1].name.toLowerCase()) + '</button>' +
+    (sent ? '' : '<p class="center"><button class="link" data-act="undo">Undo last</button></p>');
+}
+
+function viewResults() {
+  let rows = '', allSent = true;
+  CONFIG.SITES.forEach((site, si) => {
+    const sent = !!state.sent[site.key];
+    if (!sent) allSent = false;
+    rows += '<div class="thr"><span>' + site.name + '</span><b>' + thresholdLabel(si, siteThreshold(si)) + '</b></div>' +
+            '<div class="rowbtn">' + saveHtml(si) + '</div>';
+  });
+  const lastSent = !!state.sent[CONFIG.SITES[nSites - 1].key];
+  return headHtml('All done') +
+    '<h2>Results</h2>' + rows +
+    '<p class="note">' + (allSent
+       ? 'Tap "Saved" on any body part to send it again. Nothing gets counted twice.'
+       : 'Tap Save on any body part that isn\u2019t saved yet. Each one opens a confirmation in a new tab.') + '</p>' +
+    (lastSent ? '' : '<p class="center"><button class="link" data-act="undo">Undo last</button></p>') +
+    '<p class="center"><button class="link" data-act="newParticipant">Start a new participant</button></p>';
+}
+
+function render() {
+  const inTest = !!state;
+  $('card-setup').hidden = inTest;
+  $('card-test').hidden = !inTest;
+  $('restart-wrap').hidden = !inTest;
+  $('lede').hidden = inTest;
+  if (!inTest) return;
+  const step = state.pos.step;
+  let html = '';
+  if (step === 'siteIntro') html = viewSiteIntro();
+  else if (step === 'blockIntro') html = viewBlockIntro();
+  else if (step === 'trial') html = viewTrial();
+  else if (step === 'siteSummary') html = viewSiteSummary();
+  else html = viewResults();
+  $('stage').innerHTML = html;
+  $('stage').querySelectorAll('a[data-site]').forEach((a) => {
+    a.setAttribute('href', siteUrl(Number(a.dataset.site)));
+  });
+}
+
+/* ---------- moving through the test ---------- */
+function record(value) {
+  const p = state.pos;
+  const block = state.blocks[p.s][p.d];
+  if (block.res.length >= N) return;
+  block.res.push(value);
+  p.t = block.res.length;
+  if (block.res.length === N) {
+    const site = CONFIG.SITES[p.s];
+    if (p.d < site.distances.length - 1) { p.d++; p.t = 0; p.step = 'blockIntro'; }
+    else { p.step = 'siteSummary'; }
+  }
+}
+
+function undo() {
+  const p = state.pos;
+  // once a body part has been saved to the sheet, its trials can't be changed
+  const savedAlready = (s) => !!state.sent[CONFIG.SITES[s].key];
+  if (p.step === 'siteSummary' && savedAlready(p.s)) return;
+  if (p.step === 'results' && savedAlready(nSites - 1)) return;
+  if (p.step === 'trial') {
+    if (p.t > 0) { state.blocks[p.s][p.d].res.pop(); p.t--; }
+    else if (p.d > 0) { p.d--; state.blocks[p.s][p.d].res.pop(); p.t = N - 1; }
+  } else if (p.step === 'blockIntro') {
+    if (p.d > 0) { p.d--; state.blocks[p.s][p.d].res.pop(); p.t = N - 1; p.step = 'trial'; }
+  } else if (p.step === 'siteSummary') {
+    const last = CONFIG.SITES[p.s].distances.length - 1;
+    p.d = last; state.blocks[p.s][last].res.pop(); p.t = N - 1; p.step = 'trial';
+  } else if (p.step === 'results') {
+    p.s = nSites - 1;
+    const last = CONFIG.SITES[p.s].distances.length - 1;
+    p.d = last; state.blocks[p.s][last].res.pop(); p.t = N - 1; p.step = 'trial';
+  }
+}
+
+/* Demo helper (only with ?demo=1 in the page address): simulated participant answers. */
+function demoFill(si) {
+  const site = CONFIG.SITES[si];
+  const truth = { shoulder: 30, forearm: 22, palm: 7 }[site.key] || 20;
+  state.blocks[si].forEach((block, d) => {
+    const dist = site.distances[d];
+    const pc = 0.5 + 0.5 / (1 + Math.exp(-(dist - truth) / (truth / 5)));
+    block.res = block.seq.map((stim) => (Math.random() < pc ? 1 : 0));
+  });
+  const p = state.pos;
+  p.s = si; p.d = site.distances.length - 1; p.t = N; p.step = 'siteSummary';
+}
+
+function siteCodes(si) {
+  let codes = '';
+  state.blocks[si].forEach((b) => {
+    b.res.forEach((r, i) => {
+      // A/B = one-point trial (right/wrong), C/D = two-point trial (right/wrong)
+      codes += b.seq[i] === 1 ? (r ? 'A' : 'B') : (r ? 'C' : 'D');
+    });
+  });
+  return codes;
+}
+
+/* The address that saves ONE body part. Tapping Save opens it in a new tab; the script writes the
+   rows and shows a plain-text confirmation. */
+function siteUrl(si) {
+  const site = CONFIG.SITES[si];
+  const q = { action: 'checkin', cid: state.cid, site: site.key };
+  CONFIG.PEOPLE.forEach((f) => { q[f.key] = state.people[f.key]; });
+  q.lat = fix ? String(fix.lat) : '';
+  q.lon = fix ? String(fix.lon) : '';
+  q.acc = fix ? String(fix.acc) : '';
+  q.dist = site.distances.join(',');
+  q.trials = siteCodes(si);
+  q.thr = siteThreshold(si).text;
+  return CONFIG.SCRIPT_URL + (CONFIG.SCRIPT_URL.indexOf('?') === -1 ? '?' : '&') + new URLSearchParams(q).toString();
+}
+
+function act(name, arg) {
+  if (!state) return;
+  const p = state.pos;
+  if (name === 'siteStart' && p.step === 'siteIntro') { p.step = 'blockIntro'; }
+  else if (name === 'blockReady' && p.step === 'blockIntro') { p.step = 'trial'; }
+  else if (name === 'ok' && p.step === 'trial') { record(1); }
+  else if (name === 'bad' && p.step === 'trial') { record(0); }
+  else if (name === 'undo') { undo(); }
+  else if (name === 'nextSite' && p.step === 'siteSummary') {
+    if (p.s < nSites - 1) { p.s++; p.d = 0; p.t = 0; p.step = 'siteIntro'; }
+    else { p.step = 'results'; }
+  }
+  else if (name === 'demoSite' && DEMO && p.step === 'siteIntro') { demoFill(p.s); }
+  else if (name === 'save') {
+    // The link itself opens the confirmation tab. Here we just remember it was tapped.
+    const si = Number(arg);
+    if (CONFIG.SITES[si]) {
+      state.sent[CONFIG.SITES[si].key] = true;
+      save();
+      setTimeout(render, 60);
+    }
     return;
   }
+  else if (name === 'newParticipant') { resetToSetup(); return; }
+  save();
+  render();
+}
 
-  const params = {
-    action: 'checkin',
-    cid: makeId(),
-    lat: fix ? String(fix.lat) : '',
-    lon: fix ? String(fix.lon) : '',
-    acc: fix ? String(fix.acc) : ''
-  };
-  CONFIG.PEOPLE.forEach((f) => { params[f.key] = inputs[f.key].value.trim(); });
-  CONFIG.QUESTIONS.forEach((q) => { params[q.key] = String(parseCm(inputs[q.key].value)); });
+function resetToSetup() {
+  state = null;
+  clearSaved();
+  CONFIG.PEOPLE.forEach((f) => { if (f.key !== 'course_section') inputs[f.key].value = ''; });
+  refresh();
+  render();
+}
 
-  const q = new URLSearchParams(params);
-  go(CONFIG.SCRIPT_URL + (CONFIG.SCRIPT_URL.indexOf('?') === -1 ? '?' : '&') + q.toString());
-  /* The browser now leaves this page. If it comes back (Back button), the form is ready again. */
-  setTimeout(() => {
-    sending = false;
-    submitBtn.textContent = 'Check in';
-    refresh();
-  }, 8000);
+$('stage').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-act]');
+  if (b) act(b.dataset.act, b.dataset.site);
+});
+
+document.addEventListener('keydown', (e) => {
+  if (!state || state.pos.step !== 'trial') return;
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  const tag = (e.target && e.target.tagName) || '';
+  if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+  if (e.key === '1') { act('ok'); }
+  else if (e.key === '0') { act('bad'); }
+});
+
+$('restart').addEventListener('click', () => {
+  if (window.confirm('Start over? This clears all trials entered so far.')) resetToSetup();
 });
 
 retryBtn.addEventListener('click', locate);
@@ -423,7 +644,20 @@ retryBtn.addEventListener('click', locate);
 if (notConfigured) {
   msg.textContent = 'Setup needed: paste your Apps Script web app URL into CONFIG.SCRIPT_URL.';
 }
-locate();
+
+/* ---------- start up ---------- */
+const saved = loadSaved();
+if (saved) {
+  state = saved.state;
+  fix = saved.fix;
+  if (state.people) CONFIG.PEOPLE.forEach((f) => { inputs[f.key].value = state.people[f.key] || ''; });
+  setLoc(fix ? 'ok' : 'bad', fix ? 'Location found' : 'Location not shared', fix ? 'Accurate to about ' + Math.round(fix.acc) + ' m.' : 'Tap Try again.', !fix);
+  refresh();
+  render();
+} else {
+  render();
+  locate();
+}
 </script>
 </body>
 </html>
