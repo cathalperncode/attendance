@@ -123,7 +123,7 @@
 <body>
 <main>
   <h1 id="title">Two-point discrimination</h1>
-  <p class="lede" id="lede">Fill in the five details and allow location. Then you'll test three body parts, entering each trial as you go.</p>
+  <p class="lede" id="lede">Fill in the five details and allow location. Signing in records your attendance, then you'll test three body parts, entering each trial as you go.</p>
 
   <div class="card" id="card-setup">
     <form id="form" novalidate>
@@ -141,7 +141,8 @@
         <button type="button" class="link" id="retry" hidden>Try again</button>
       </div>
 
-      <button type="submit" id="submit" disabled>Start testing</button>
+      <button type="submit" id="submit" disabled>Sign into course and start 2-point demo experiment</button>
+      <p class="note center">This records your attendance and location, then starts the experiment.</p>
       <p id="hint"></p>
       <p id="msg" role="alert"></p>
     </form>
@@ -151,7 +152,7 @@
     <div id="stage"></div>
   </div>
 
-  <p class="fine">Your names, student IDs, course section, trial results, device location, and the time are saved for your instructor. <span style="opacity:.6">v15</span></p>
+  <p class="fine">Your names, student IDs, course section, trial results, device location, and the time are saved for your instructor. <span style="opacity:.6">v17</span></p>
   <p class="fine center" id="restart-wrap" hidden><button type="button" class="link" id="restart">Start over</button></p>
 </main>
 
@@ -162,7 +163,7 @@ const CONFIG = {
   REQUIRE_LOCATION: true,        // true = testing can't start without sharing location
   TRIALS_PER_DISTANCE: 20,       // must be even: half one-point trials, half two-point trials
   MAX_RUN: 3,                    // never more than this many of the same trial type in a row
-  CRITERION: 0.80,               // the threshold is where accuracy crosses this (0.80 = 16 of 20 correct)
+  CRITERION: 0.75,               // the threshold is where accuracy crosses this (0.75 = 15 of 20 correct)
   // Do not change the "key" values. They must match the Apps Script.
   PEOPLE: [
     { key: 'course_section',  short: 'course section',         label: 'Course Section',          min: 1, max: 30 },
@@ -184,7 +185,7 @@ const CONFIG = {
 /* =============================== */
 
 const $ = (id) => document.getElementById(id);
-const STORE_KEY = 'psc-2pd-v12';
+const STORE_KEY = 'psc-2pd-v13';
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo') === '1';
 
@@ -281,7 +282,7 @@ function loadSaved() {
     const raw = localStorage.getItem(STORE_KEY);
     if (!raw) return null;
     const o = JSON.parse(raw);
-    if (!o || !o.state || o.state.v !== 12) return null;
+    if (!o || !o.state || o.state.v !== 13) return null;
     if (o.state.blocks.length !== CONFIG.SITES.length) return null;
     return o;
   } catch (e) { return null; }
@@ -367,7 +368,7 @@ $('form').addEventListener('submit', (e) => {
   const people = {};
   CONFIG.PEOPLE.forEach((f) => { people[f.key] = inputs[f.key].value.trim(); });
   state = {
-    v: 12,
+    v: 13,
     sent: {},
     cid: makeId(DEMO ? 'demo' : 'c'),
     demo: DEMO,
@@ -376,6 +377,7 @@ $('form').addEventListener('submit', (e) => {
     blocks: CONFIG.SITES.map((site) => site.distances.map(() => ({ seq: makeSequence(N, CONFIG.MAX_RUN), res: [] })))
   };
   save();
+  openSave(attendanceUrl());   // records attendance + location; a small confirmation opens in a new tab
   render();
 });
 
@@ -450,45 +452,31 @@ function siteTable(si) {
   return '<table><thead><tr><th>Distance</th><th>Correct</th><th>Two-point right</th><th>One-point wrong</th></tr></thead><tbody>' + rows + '</tbody></table>';
 }
 
-function saveHtml(si) {
-  const site = CONFIG.SITES[si];
-  const sent = !!state.sent[site.key];
-  return '<a class="primary linkbtn" data-act="save" data-site="' + si + '" target="_blank" rel="noopener">' +
-         (sent ? 'Saved \u2713 (tap to save again)' : 'Save ' + site.name.toLowerCase() + ' to the sheet') + '</a>';
-}
-
 function viewSiteSummary() {
   const p = state.pos, site = CONFIG.SITES[p.s];
   const t = siteThreshold(p.s);
   const last = p.s === nSites - 1;
-  const sent = !!state.sent[site.key];
+  const goLabel = last ? 'Save ' + site.name.toLowerCase() + ' and finish' : 'Save ' + site.name.toLowerCase() + ' and go to ' + CONFIG.SITES[p.s + 1].name.toLowerCase();
   return headHtml(site.name + ' finished') +
     '<h2>' + site.name + ' threshold</h2>' +
     '<div class="thr"><span>Estimated threshold</span><b>' + thresholdLabel(p.s, t) + '</b></div>' +
     siteTable(p.s) +
     '<p class="note">Threshold is where accuracy crosses ' + Math.round(CONFIG.CRITERION * 100) + '%, worked out between the distances you tested.</p>' +
-    saveHtml(p.s) +
-    '<p class="note">Saving opens a confirmation in a new tab. Close it and come back here.' + (sent ? '' : ' You can also save later from the results screen.') + '</p>' +
-    '<button class="primary secondary" data-act="nextSite">' + (last ? 'See all results' : 'Next: ' + CONFIG.SITES[p.s + 1].name.toLowerCase()) + '</button>' +
-    (sent ? '' : '<p class="center"><button class="link" data-act="undo">Undo last</button></p>');
+    '<button class="primary" data-act="saveNext">' + goLabel + '</button>' +
+    '<p class="note center">A small confirmation opens in a new tab. Close it to come back here.</p>' +
+    '<p class="center"><button class="link" data-act="undo">Undo last</button></p>';
 }
 
 function viewResults() {
-  let rows = '', allSent = true;
+  let rows = '';
   CONFIG.SITES.forEach((site, si) => {
-    const sent = !!state.sent[site.key];
-    if (!sent) allSent = false;
     rows += '<div class="thr"><span>' + site.name + '</span><b>' + thresholdLabel(si, siteThreshold(si)) + '</b></div>' +
-            '<div class="rowbtn">' + saveHtml(si) + '</div>';
+            '<p class="note center"><button class="link" data-act="resave" data-site="' + si + '">Send ' + site.name.toLowerCase() + ' again</button></p>';
   });
-  const lastSent = !!state.sent[CONFIG.SITES[nSites - 1].key];
   return headHtml('All done') +
     '<h2>Results</h2>' + rows +
-    '<p class="note">' + (allSent
-       ? 'Tap "Saved" on any body part to send it again. Nothing gets counted twice.'
-       : 'Tap Save on any body part that isn\u2019t saved yet. Each one opens a confirmation in a new tab.') + '</p>' +
-    (lastSent ? '' : '<p class="center"><button class="link" data-act="undo">Undo last</button></p>') +
-    '<p class="center"><button class="link" data-act="newParticipant">Start a new participant</button></p>';
+    '<p class="note">Each body part was saved when you tapped its save button. If a confirmation tab didn\u2019t open or said something went wrong, tap "Send again". Nothing is counted twice.</p>' +
+    '<button class="primary secondary" data-act="newParticipant">Start a new participant</button>';
 }
 
 function render() {
@@ -506,9 +494,6 @@ function render() {
   else if (step === 'siteSummary') html = viewSiteSummary();
   else html = viewResults();
   $('stage').innerHTML = html;
-  $('stage').querySelectorAll('a[data-site]').forEach((a) => {
-    a.setAttribute('href', siteUrl(Number(a.dataset.site)));
-  });
 }
 
 /* ---------- moving through the test ---------- */
@@ -527,10 +512,8 @@ function record(value) {
 
 function undo() {
   const p = state.pos;
-  // once a body part has been saved to the sheet, its trials can't be changed
-  const savedAlready = (s) => !!state.sent[CONFIG.SITES[s].key];
-  if (p.step === 'siteSummary' && savedAlready(p.s)) return;
-  if (p.step === 'results' && savedAlready(nSites - 1)) return;
+  // a body part that has been saved can't be changed: undo only works before saving
+  if (p.step === 'results') return;
   if (p.step === 'trial') {
     if (p.t > 0) { state.blocks[p.s][p.d].res.pop(); p.t--; }
     else if (p.d > 0) { p.d--; state.blocks[p.s][p.d].res.pop(); p.t = N - 1; }
@@ -570,6 +553,30 @@ function siteCodes(si) {
   return codes;
 }
 
+/* The address that records sign-in: attendance plus location. */
+function attendanceUrl() {
+  const q = { action: 'checkin', cid: state.cid };
+  CONFIG.PEOPLE.forEach((f) => { q[f.key] = state.people[f.key]; });
+  q.lat = fix ? String(fix.lat) : '';
+  q.lon = fix ? String(fix.lon) : '';
+  q.acc = fix ? String(fix.acc) : '';
+  return CONFIG.SCRIPT_URL + (CONFIG.SCRIPT_URL.indexOf('?') === -1 ? '?' : '&') + new URLSearchParams(q).toString();
+}
+
+/* Opens an address in a new tab, like tapping a link. The script saves the rows and shows a plain-text confirmation. */
+function openSave(url) {
+  try {
+    const a = document.createElement('a');
+    a.href = url;
+    a.target = '_blank';
+    a.rel = 'noopener';
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  } catch (e) {}
+}
+
 /* The address that saves ONE body part. Tapping Save opens it in a new tab; the script writes the
    rows and shows a plain-text confirmation. */
 function siteUrl(si) {
@@ -593,19 +600,17 @@ function act(name, arg) {
   else if (name === 'ok' && p.step === 'trial') { record(1); }
   else if (name === 'bad' && p.step === 'trial') { record(0); }
   else if (name === 'undo') { undo(); }
-  else if (name === 'nextSite' && p.step === 'siteSummary') {
+  else if (name === 'saveNext' && p.step === 'siteSummary') {
+    // one button: save this body part's threshold, then move on
+    openSave(siteUrl(p.s));
+    state.sent[CONFIG.SITES[p.s].key] = true;
     if (p.s < nSites - 1) { p.s++; p.d = 0; p.t = 0; p.step = 'siteIntro'; }
     else { p.step = 'results'; }
   }
   else if (name === 'demoSite' && DEMO && p.step === 'siteIntro') { demoFill(p.s); }
-  else if (name === 'save') {
-    // The link itself opens the confirmation tab. Here we just remember it was tapped.
+  else if (name === 'resave') {
     const si = Number(arg);
-    if (CONFIG.SITES[si]) {
-      state.sent[CONFIG.SITES[si].key] = true;
-      save();
-      setTimeout(render, 60);
-    }
+    if (CONFIG.SITES[si]) openSave(siteUrl(si));
     return;
   }
   else if (name === 'newParticipant') { resetToSetup(); return; }
