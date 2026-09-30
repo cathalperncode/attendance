@@ -215,7 +215,7 @@
     </section>
   </div>
 
-  <p class="fine">Checking in records your name, your answers, your device's location, and the time. Your instructor uses this for attendance. <span style="opacity:.6">v5</span></p>
+  <p class="fine">Checking in records your name, your answers, your device's location, and the time. Your instructor uses this for attendance. <span style="opacity:.6">v6</span></p>
 </main>
 
 <script>
@@ -243,7 +243,6 @@ const retryBtn = $('retry');
 
 let fix = null;       // { lat, lon, acc } once the browser returns a position
 let sending = false;
-let sid = null;       // one id per check-in attempt, so a retry can't create a duplicate row
 
 const notConfigured = CONFIG.SCRIPT_URL.indexOf('PASTE_YOUR') === 0;
 
@@ -349,38 +348,10 @@ function showDone(name, time) {
   $('done-detail').textContent = name + ', sent at ' + (time || 'just now') + '.';
 }
 
-/* Route 2: a plain form POST into a hidden frame (works like a normal web form, no browser reply rules). */
-function sendViaForm(params) {
-  const frameName = 'sink' + Date.now();
-  const frame = document.createElement('iframe');
-  frame.name = frameName;
-  frame.style.display = 'none';
-  frame.setAttribute('aria-hidden', 'true');
-  const form = document.createElement('form');
-  form.setAttribute('method', 'POST');
-  form.setAttribute('action', CONFIG.SCRIPT_URL);
-  form.setAttribute('target', frameName);
-  form.style.display = 'none';
-  Object.keys(params).forEach((k) => {
-    const field = document.createElement('input');
-    field.type = 'hidden';
-    field.name = k;
-    field.value = params[k];
-    form.appendChild(field);
-  });
-  document.body.appendChild(frame);
-  document.body.appendChild(form);
-  form.submit();
-  setTimeout(() => { form.remove(); frame.remove(); }, 60000);   // clean up much later, never cancel the send
-}
-
-/* Sends the check-in with the form POST only (the route that saves rows).
-   The second "fetch" route was removed: Google blocks the page from reading its reply,
-   and that blocked read is what showed up as an error. */
-async function sendCheckin(params) {
-  if (navigator.onLine === false) throw new Error('offline');
-  sendViaForm(params);
-  await new Promise((r) => setTimeout(r, 1500));   // give the form a moment to go out
+/* Sends the check-in by opening your script address in this tab, the same thing that worked when
+   you pasted the address into a browser. The script saves the row and shows a confirmation page. */
+function go(url) {
+  window.location.assign(url);
 }
 
 function makeId() {
@@ -397,9 +368,17 @@ $('form').addEventListener('submit', async (e) => {
   msg.textContent = '';
   refresh();
 
-  sid = sid || makeId();
+  if (navigator.onLine === false) {
+    msg.textContent = 'You appear to be offline. Reconnect, then tap Check in again.';
+    sending = false;
+    submitBtn.textContent = 'Check in';
+    refresh();
+    return;
+  }
+
   const params = {
-    sid: sid,
+    action: 'checkin',
+    sid: makeId(),
     name: name,
     lat: fix ? String(fix.lat) : '',
     lon: fix ? String(fix.lon) : '',
@@ -407,18 +386,14 @@ $('form').addEventListener('submit', async (e) => {
   };
   CONFIG.QUESTIONS.forEach((q) => { params[q.key] = String(parseCm(inputs[q.key].value)); });
 
-  try {
-    await sendCheckin(params);
-    sid = null;
-    showDone(name, new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }));
-    return;
-  } catch (err) {
-    msg.textContent = 'You appear to be offline. Reconnect, then tap Check in again. It won\u2019t be counted twice.';
-  } finally {
+  const q = new URLSearchParams(params);
+  go(CONFIG.SCRIPT_URL + (CONFIG.SCRIPT_URL.indexOf('?') === -1 ? '?' : '&') + q.toString());
+  /* The browser now leaves this page. If it comes back (Back button), the form is ready again. */
+  setTimeout(() => {
     sending = false;
     submitBtn.textContent = 'Check in';
     refresh();
-  }
+  }, 8000);
 });
 
 nameInput.addEventListener('input', refresh);
