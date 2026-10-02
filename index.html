@@ -166,26 +166,14 @@
 <body>
 <main>
   <h1 id="title">Two-point discrimination</h1>
-  <p class="lede" id="lede">Fill in the five details and allow location. Signing in records your attendance, then you'll test three body parts, entering each trial as you go.</p>
+  <p class="lede" id="lede">Fill in the five details. Signing in records your attendance, then you'll test three body parts, entering each trial as you go.</p>
 
   <div class="card" id="card-setup">
     <form id="form" novalidate>
       <div id="people"></div>
 
-      <div class="loc" id="loc" data-state="busy" role="status" aria-live="polite">
-        <div class="ring" aria-hidden="true">
-          <svg class="i-ok" viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></svg>
-          <svg class="i-bad" viewBox="0 0 24 24"><path d="M12 6.5v7M12 17.4v.1"/></svg>
-        </div>
-        <div class="loc-text">
-          <strong id="loc-title">Finding your location</strong>
-          <span id="loc-detail">Tap Allow if your browser asks.</span>
-        </div>
-        <button type="button" class="link" id="retry" hidden>Try again</button>
-      </div>
-
       <button type="submit" id="submit" disabled>Sign into course and start 2-point demo experiment</button>
-      <p class="note center">This records your attendance and location, then starts the experiment.</p>
+      <p class="note center">This records your attendance, then starts the experiment.</p>
       <p id="hint"></p>
       <p id="msg" role="alert"></p>
     </form>
@@ -197,7 +185,7 @@
     <div id="stage"></div>
   </div>
 
-  <p class="fine">Your names, student IDs, course section, trial results, device location, and the time are saved for your instructor. <span style="opacity:.6">v23</span></p>
+  <p class="fine">Your names, student IDs, course section, trial results, and the time are saved for your instructor. <span style="opacity:.6">v24</span></p>
   <p class="fine center" id="restart-wrap" hidden><button type="button" class="link" id="restart">Start over</button></p>
 </main>
 
@@ -205,7 +193,6 @@
 /* ===== Edit these settings ===== */
 const CONFIG = {
   SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbyWVAC9IDswOxlJvyZU7XiuH-3QN-rc9-7pJwHWPo19wgz2jSaJLouImfOV0rCTWeCvZA/exec',  // the Web app URL from Apps Script (ends in /exec)
-  REQUIRE_LOCATION: true,        // true = testing can't start without sharing location
   TRIALS_PER_DISTANCE: 20,       // must be even: half one-point trials, half two-point trials
   MAX_RUN: 3,                    // never more than this many of the same trial type in a row
   CRITERION: 0.75,               // the threshold is where accuracy crosses this (0.75 = 15 of 20 correct)
@@ -243,9 +230,7 @@ const DEMO = params.get('demo') === '1';
 const submitBtn = $('submit');
 const msg = $('msg');
 const hint = $('hint');
-const retryBtn = $('retry');
 
-let fix = null;      // { lat, lon, acc } once the browser returns a position
 let state = null;    // null until testing starts
 
 const notConfigured = CONFIG.SCRIPT_URL.indexOf('PASTE_YOUR') === 0;
@@ -326,7 +311,7 @@ function thresholdLabel(si, t) {
 
 /* ---------- saving progress on this device ---------- */
 function save() {
-  try { localStorage.setItem(STORE_KEY, JSON.stringify({ state: state, fix: fix })); } catch (e) {}
+  try { localStorage.setItem(STORE_KEY, JSON.stringify({ state: state })); } catch (e) {}
 }
 function loadSaved() {
   try {
@@ -367,7 +352,6 @@ function missingItems() {
   CONFIG.PEOPLE.forEach((f) => {
     if (inputs[f.key].value.trim().length < f.min) m.push(f.short);
   });
-  if (CONFIG.REQUIRE_LOCATION && !fix) m.push('location');
   return m;
 }
 
@@ -375,42 +359,6 @@ function refresh() {
   const m = missingItems();
   submitBtn.disabled = notConfigured || m.length > 0;
   hint.textContent = m.length ? 'Still needed: ' + m.join(', ') + '.' : '';
-}
-
-function setLoc(stateName, title, detail, showRetry) {
-  $('loc').dataset.state = stateName;
-  $('loc-title').textContent = title;
-  $('loc-detail').textContent = detail;
-  retryBtn.hidden = !showRetry;
-}
-
-function locate() {
-  fix = null;
-  refresh();
-  if (!('geolocation' in navigator)) {
-    setLoc('bad', 'Location isn\u2019t available', 'This browser can\u2019t share location. Try Safari or Chrome.', false);
-    return;
-  }
-  setLoc('busy', 'Finding your location', 'Tap Allow if your browser asks.', false);
-  navigator.geolocation.getCurrentPosition(
-    (pos) => {
-      fix = { lat: pos.coords.latitude, lon: pos.coords.longitude, acc: pos.coords.accuracy };
-      setLoc('ok', 'Location found', 'Accurate to about ' + Math.round(fix.acc) + ' m.', false);
-      refresh();
-      if (state) save();
-    },
-    (err) => {
-      if (err.code === 1) {
-        setLoc('bad', 'Location is blocked', 'Allow location for this site in your browser settings, then tap Try again.', true);
-      } else if (err.code === 3) {
-        setLoc('bad', 'Location timed out', 'Check that location services are on, then tap Try again.', true);
-      } else {
-        setLoc('bad', 'Location unavailable', 'Turn on location services or move near a window, then tap Try again.', true);
-      }
-      refresh();
-    },
-    { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
-  );
 }
 
 $('form').addEventListener('submit', (e) => {
@@ -430,7 +378,7 @@ $('form').addEventListener('submit', (e) => {
   };
   save();
   render();
-  performSave('signin', attendanceUrl());   // records attendance + location; the result shows in the panel above
+  performSave('signin', attendanceUrl());   // records attendance; the result shows in the panel above
 });
 
 /* ---------- test screens ---------- */
@@ -658,13 +606,10 @@ function siteCodes(si) {
   return codes;
 }
 
-/* The address that records sign-in: attendance plus location. */
+/* The address that records sign-in (attendance). */
 function attendanceUrl() {
   const q = { action: 'checkin', cid: state.cid };
   CONFIG.PEOPLE.forEach((f) => { q[f.key] = state.people[f.key]; });
-  q.lat = fix ? String(fix.lat) : '';
-  q.lon = fix ? String(fix.lon) : '';
-  q.acc = fix ? String(fix.acc) : '';
   return CONFIG.SCRIPT_URL + (CONFIG.SCRIPT_URL.indexOf('?') === -1 ? '?' : '&') + new URLSearchParams(q).toString();
 }
 
@@ -737,7 +682,7 @@ function setSave(key, info) {
 
 function saveOkText(key, res) {
   if (key === 'signin') {
-    return res.duplicate ? 'Already signed in.' : 'Signed in. Your attendance and location are saved' + (res.time ? ' (' + res.time + ').' : '.');
+    return res.duplicate ? 'Already signed in.' : 'Signed in. Your attendance is saved' + (res.time ? ' (' + res.time + ').' : '.');
   }
   const si = CONFIG.SITES.findIndex((s) => s.key === key);
   const n = res.saved ? res.saved.length : 0;
@@ -788,9 +733,6 @@ function siteUrl(si) {
   const site = CONFIG.SITES[si];
   const q = { action: 'checkin', cid: state.cid, site: site.key };
   CONFIG.PEOPLE.forEach((f) => { q[f.key] = state.people[f.key]; });
-  q.lat = fix ? String(fix.lat) : '';
-  q.lon = fix ? String(fix.lon) : '';
-  q.acc = fix ? String(fix.acc) : '';
   q.dist = site.distances.join(',');
   q.trials = siteCodes(si);
   q.thr = siteThreshold(si).text;
@@ -856,7 +798,6 @@ $('restart').addEventListener('click', () => {
   if (window.confirm('Start over? This clears all trials entered so far.')) resetToSetup();
 });
 
-retryBtn.addEventListener('click', locate);
 
 if (notConfigured) {
   msg.textContent = 'Setup needed: paste your Apps Script web app URL into CONFIG.SCRIPT_URL.';
@@ -873,18 +814,15 @@ const DIAGRAMS = {
 const saved = loadSaved();
 if (saved) {
   state = saved.state;
-  fix = saved.fix;
   state.saves = state.saves || {};
   Object.keys(state.saves).forEach((k) => {
     if (state.saves[k].status === 'saving') state.saves[k] = { status: 'fail', text: saveLabel(k) + ' wasn\u2019t confirmed.' };
   });
   if (state.people) CONFIG.PEOPLE.forEach((f) => { inputs[f.key].value = state.people[f.key] || ''; });
-  setLoc(fix ? 'ok' : 'bad', fix ? 'Location found' : 'Location not shared', fix ? 'Accurate to about ' + Math.round(fix.acc) + ' m.' : 'Tap Try again.', !fix);
   refresh();
   render();
 } else {
   render();
-  locate();
 }
 probeSave();
 </script>
