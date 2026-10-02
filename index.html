@@ -99,22 +99,32 @@
   .diagram.anim svg { display: block; width: 100%; height: auto; }
   .steps { display: flex; gap: 0.4rem; flex-wrap: wrap; justify-content: center; margin: 0.6rem 0 0; }
   .chip { font-size: 0.86rem; padding: 0.3rem 0.65rem; border-radius: 99px; border: 1px solid var(--line); color: var(--muted); }
-  .tool  { animation: pressDown 5s ease-in-out infinite; }
-  .dent  { opacity: 0; animation: dentShow 5s ease-in-out infinite; }
-  .arrow { opacity: 0; animation: arrowShow 5s ease-in-out infinite; }
-  .chip.c1 { animation: chip1 5s infinite; }
-  .chip.c2 { animation: chip2 5s infinite; }
-  .chip.c3 { animation: chip3 5s infinite; }
-  @keyframes pressDown { 0%, 6% { transform: translateY(-40px); } 26%, 66% { transform: translateY(0); } 88%, 100% { transform: translateY(-40px); } }
-  @keyframes dentShow  { 0%, 24% { opacity: 0; } 30%, 66% { opacity: 0.8; } 74%, 100% { opacity: 0; } }
-  @keyframes arrowShow { 0%, 24% { opacity: 0; } 30%, 64% { opacity: 1; } 70%, 100% { opacity: 0; } }
-  @keyframes chip1 { 0%, 5% { background: transparent; color: var(--muted); border-color: var(--line); } 7%, 25% { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); } 27%, 100% { background: transparent; color: var(--muted); border-color: var(--line); } }
-  @keyframes chip2 { 0%, 25% { background: transparent; color: var(--muted); border-color: var(--line); } 27%, 65% { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); } 67%, 100% { background: transparent; color: var(--muted); border-color: var(--line); } }
-  @keyframes chip3 { 0%, 65% { background: transparent; color: var(--muted); border-color: var(--line); } 67%, 88% { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); } 90%, 100% { background: transparent; color: var(--muted); border-color: var(--line); } }
+  .sceneA { transform: translateX(85px); animation: showA 10s infinite; }
+  .sceneB { transform: translateX(-85px); animation: showB 10s infinite; }
+  .sceneA .tool { animation: pressA 10s ease-in-out infinite; }
+  .sceneB .tool { animation: pressB 10s ease-in-out infinite; }
+  .sceneA .dent, .sceneA .arrow { opacity: 0; animation: holdA 10s infinite; }
+  .sceneB .dent, .sceneB .arrow { opacity: 0; animation: holdB 10s infinite; }
+  .or, .divider { opacity: 0; }
+  .chip.c1 { animation: chip1 10s infinite; }
+  .chip.c2 { animation: chip2 10s infinite; }
+  .chip.c3 { animation: chip3 10s infinite; }
+  /* 10-second loop: a ONE-point trial (first half), then a TWO-point trial (second half) */
+  @keyframes showA  { 0%, 44% { opacity: 1; } 48%, 96% { opacity: 0; } 100% { opacity: 1; } }
+  @keyframes showB  { 0%, 52% { opacity: 0; } 56%, 92% { opacity: 1; } 96%, 100% { opacity: 0; } }
+  @keyframes pressA { 0%, 4% { transform: translateY(-40px); } 14%, 34% { transform: translateY(0); } 44%, 100% { transform: translateY(-40px); } }
+  @keyframes pressB { 0%, 56% { transform: translateY(-40px); } 66%, 86% { transform: translateY(0); } 92%, 100% { transform: translateY(-40px); } }
+  @keyframes holdA  { 0%, 12% { opacity: 0; } 16%, 34% { opacity: 0.85; } 38%, 100% { opacity: 0; } }
+  @keyframes holdB  { 0%, 64% { opacity: 0; } 68%, 86% { opacity: 0.85; } 90%, 100% { opacity: 0; } }
+  @keyframes chip1 { 0%, 3% { background: transparent; color: var(--muted); border-color: var(--line); } 4%, 13% { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); } 14%, 55% { background: transparent; color: var(--muted); border-color: var(--line); } 56%, 65% { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); } 66%, 100% { background: transparent; color: var(--muted); border-color: var(--line); } }
+  @keyframes chip2 { 0%, 13% { background: transparent; color: var(--muted); border-color: var(--line); } 14%, 33% { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); } 34%, 65% { background: transparent; color: var(--muted); border-color: var(--line); } 66%, 85% { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); } 86%, 100% { background: transparent; color: var(--muted); border-color: var(--line); } }
+  @keyframes chip3 { 0%, 33% { background: transparent; color: var(--muted); border-color: var(--line); } 34%, 43% { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); } 44%, 85% { background: transparent; color: var(--muted); border-color: var(--line); } 86%, 91% { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); } 92%, 100% { background: transparent; color: var(--muted); border-color: var(--line); } }
   @media (prefers-reduced-motion: reduce) {
+    .sceneA, .sceneB { animation: none; transform: none; opacity: 1; }
     .tool, .dent, .arrow, .chip { animation: none; }
-    .dent, .arrow { opacity: 0.8; }
+    .dent, .arrow { opacity: 0.85; }
     .tool { transform: translateY(0); }
+    .or, .divider { opacity: 1; }
   }
   .bigmm { font-size: 3rem; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; margin: 0.25rem 0 0.5rem; }
   .stim { border: 2px solid var(--accent); border-radius: 16px; padding: 1.4rem 1rem; text-align: center; margin-bottom: 1rem; }
@@ -187,7 +197,7 @@
     <div id="stage"></div>
   </div>
 
-  <p class="fine">Your names, student IDs, course section, trial results, device location, and the time are saved for your instructor. <span style="opacity:.6">v21</span></p>
+  <p class="fine">Your names, student IDs, course section, trial results, device location, and the time are saved for your instructor. <span style="opacity:.6">v22</span></p>
   <p class="fine center" id="restart-wrap" hidden><button type="button" class="link" id="restart">Start over</button></p>
 </main>
 
@@ -447,42 +457,48 @@ function updateProgress() {
   lastPct = pct;
 }
 
-/* Animated side view of the press: both tools come down together, hold, and lift together. */
+/* Animated side view of the press. Each trial uses EITHER the one-point tool OR the two-point tool,
+   so the animation plays a one-point trial, then a two-point trial (never both at once). */
 function pressAnimationHtml(open) {
-  const metal = 'url(#metalG)', edge = '#274e7e';
+  const metal = 'url(#metalG)', edge = '#274e7e', lab = '#6b3a1e';
   const svg =
-    '<svg viewBox="0 -48 360 248" role="img" aria-label="Animation: the one-point tool and the two-point tool press down together with even pressure, hold for 1 to 2 seconds, then lift together.">' +
+    '<svg viewBox="0 -48 360 248" role="img" aria-label="Animation: on each trial the experimenter uses either the one-point tool or the two-point tool, never both. The tool presses down with even pressure, holds, then lifts. On two-point trials both tips go down together.">' +
       '<defs>' +
         '<linearGradient id="skinG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f7cfae"/><stop offset="1" stop-color="#eaa77a"/></linearGradient>' +
         '<linearGradient id="metalG" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#2f5f96"/><stop offset="0.5" stop-color="#6aa0d2"/><stop offset="1" stop-color="#2f5f96"/></linearGradient>' +
       '</defs>' +
-      '<line x1="180" y1="10" x2="180" y2="126" stroke="#e3e7ea" stroke-width="2" stroke-dasharray="4 5"/>' +
+      '<line class="divider" x1="180" y1="-30" x2="180" y2="126" stroke="#e3e7ea" stroke-width="2" stroke-dasharray="4 5"/>' +
       '<rect x="8" y="132" width="344" height="62" rx="16" fill="url(#skinG)" stroke="#c98a63" stroke-width="2"/>' +
-      '<ellipse class="dent" cx="95" cy="134" rx="12" ry="4" fill="#c27a50"/>' +
-      '<ellipse class="dent" cx="236" cy="134" rx="12" ry="4" fill="#c27a50"/>' +
-      '<ellipse class="dent" cx="294" cy="134" rx="12" ry="4" fill="#c27a50"/>' +
-      /* one-point tool */
-      '<g class="tool">' +
-        '<rect x="80" y="12" width="30" height="46" rx="8" fill="' + metal + '" stroke="' + edge + '" stroke-width="2"/>' +
-        '<path d="M88 56 V124 a7 7 0 0 0 14 0 V56 z" fill="' + metal + '" stroke="' + edge + '" stroke-width="2"/>' +
+      '<text class="or" x="180" y="62" text-anchor="middle" font-size="18" font-weight="700" fill="#8a97a0">OR</text>' +
+      /* scene A: a one-point trial */
+      '<g class="sceneA">' +
+        '<ellipse class="dent" cx="95" cy="134" rx="12" ry="4" fill="#c27a50"/>' +
+        '<g class="tool">' +
+          '<rect x="80" y="12" width="30" height="46" rx="8" fill="' + metal + '" stroke="' + edge + '" stroke-width="2"/>' +
+          '<path d="M88 56 V124 a7 7 0 0 0 14 0 V56 z" fill="' + metal + '" stroke="' + edge + '" stroke-width="2"/>' +
+        '</g>' +
+        '<g class="arrow" fill="none" stroke="#c0392b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M95 96 v22 m-6 -7 l6 7 l6 -7"/></g>' +
+        '<text x="95" y="168" text-anchor="middle" font-size="16" font-weight="700" fill="' + lab + '">ONE-point trial</text>' +
       '</g>' +
-      /* two-point tool */
-      '<g class="tool">' +
-        '<rect x="250" y="6" width="30" height="30" rx="8" fill="' + metal + '" stroke="' + edge + '" stroke-width="2"/>' +
-        '<rect x="224" y="34" width="82" height="16" rx="8" fill="' + metal + '" stroke="' + edge + '" stroke-width="2"/>' +
-        '<path d="M229 48 V124 a7 7 0 0 0 14 0 V48 z" fill="' + metal + '" stroke="' + edge + '" stroke-width="2"/>' +
-        '<path d="M287 48 V124 a7 7 0 0 0 14 0 V48 z" fill="' + metal + '" stroke="' + edge + '" stroke-width="2"/>' +
+      /* scene B: a two-point trial (both tips go down together) */
+      '<g class="sceneB">' +
+        '<ellipse class="dent" cx="236" cy="134" rx="12" ry="4" fill="#c27a50"/>' +
+        '<ellipse class="dent" cx="294" cy="134" rx="12" ry="4" fill="#c27a50"/>' +
+        '<g class="tool">' +
+          '<rect x="250" y="6" width="30" height="30" rx="8" fill="' + metal + '" stroke="' + edge + '" stroke-width="2"/>' +
+          '<rect x="224" y="34" width="82" height="16" rx="8" fill="' + metal + '" stroke="' + edge + '" stroke-width="2"/>' +
+          '<path d="M229 48 V124 a7 7 0 0 0 14 0 V48 z" fill="' + metal + '" stroke="' + edge + '" stroke-width="2"/>' +
+          '<path d="M287 48 V124 a7 7 0 0 0 14 0 V48 z" fill="' + metal + '" stroke="' + edge + '" stroke-width="2"/>' +
+        '</g>' +
+        '<g class="arrow" fill="none" stroke="#c0392b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M236 96 v22 m-6 -7 l6 7 l6 -7"/><path d="M294 96 v22 m-6 -7 l6 7 l6 -7"/></g>' +
+        '<text x="265" y="164" text-anchor="middle" font-size="16" font-weight="700" fill="' + lab + '">TWO-point trial</text>' +
+        '<text x="265" y="183" text-anchor="middle" font-size="12" fill="' + lab + '">both tips go down together</text>' +
       '</g>' +
-      /* equal-pressure arrows (appear while holding) */
-      '<g class="arrow" fill="none" stroke="#c0392b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">' +
-        '<path d="M236 96 v22 m-6 -7 l6 7 l6 -7"/><path d="M294 96 v22 m-6 -7 l6 7 l6 -7"/><path d="M95 96 v22 m-6 -7 l6 7 l6 -7"/>' +
-      '</g>' +
-      '<text x="95" y="170" text-anchor="middle" font-size="16" font-weight="700" fill="#6b3a1a">ONE point</text>' +
-      '<text x="265" y="170" text-anchor="middle" font-size="16" font-weight="700" fill="#6b3a1a">TWO points</text>' +
     '</svg>';
   return '<details class="howto"' + (open ? ' open' : '') + '><summary>How to press (animation)</summary>' +
     '<figure class="diagram anim">' + svg + '</figure>' +
-    '<div class="steps"><span class="chip c1">1 Press down together</span><span class="chip c2">2 Hold, even pressure</span><span class="chip c3">3 Lift together</span></div>' +
+    '<div class="steps"><span class="chip c1">1 Press down</span><span class="chip c2">2 Hold, even pressure</span><span class="chip c3">3 Lift</span></div>' +
+    '<p class="note center">Each trial uses one OR the other, never both.</p>' +
     '</details>';
 }
 
