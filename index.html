@@ -185,7 +185,7 @@
     <div id="stage"></div>
   </div>
 
-  <p class="fine">Your names, student IDs, course section, trial results, and the time are saved for your instructor. <span style="opacity:.6">v24</span></p>
+  <p class="fine">Your names, student IDs, course section, trial results, and the time are saved for your instructor. <span style="opacity:.6">v25</span></p>
   <p class="fine center" id="restart-wrap" hidden><button type="button" class="link" id="restart">Start over</button></p>
 </main>
 
@@ -195,7 +195,7 @@ const CONFIG = {
   SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbyWVAC9IDswOxlJvyZU7XiuH-3QN-rc9-7pJwHWPo19wgz2jSaJLouImfOV0rCTWeCvZA/exec',  // the Web app URL from Apps Script (ends in /exec)
   TRIALS_PER_DISTANCE: 20,       // must be even: half one-point trials, half two-point trials
   MAX_RUN: 3,                    // never more than this many of the same trial type in a row
-  CRITERION: 0.75,               // the threshold is where accuracy crosses this (0.75 = 15 of 20 correct)
+  CRITERION: 0.70,               // the threshold is where accuracy crosses this (0.70 = 14 of 20 correct)
   // Do not change the "key" values. They must match the Apps Script.
   PEOPLE: [
     { key: 'course_section',  short: 'course section',         label: 'Course Section',          min: 1, max: 30 },
